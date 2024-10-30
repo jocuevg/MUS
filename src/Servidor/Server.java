@@ -5,6 +5,7 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Collections;
+import java.util.Comparator;
 
 
 public class Server {
@@ -14,9 +15,10 @@ public class Server {
     private static int[] puntos=new int[2];
     private static int ronda=0;
     private static int jugadorMano=0;
-    private static  int apuesta=0;           // Apuesta actual en la ronda
-    private static int ganador;         // ID del jugador que inició la última apuesta
-    private static boolean ordago=false;            // Si se ha echado un órdago
+    private static int apuesta=0;
+    private static int envido=0;            
+    private static int ganador;         
+    private static boolean ordago=false;            
     private static boolean grandeAlPaso=true;
     private static boolean pequenaAlPaso=true;
     private static boolean paresAlPaso=true;
@@ -45,11 +47,13 @@ public class Server {
                 mandarATodos("Ronda "+(ronda+1)+", jugador "+(ronda+1)+" va de mano");
                 repartir();
                 mus();
+                ordenarManos();
                 grande();
                 /*pequena();
                 pares();
-                juego();
-                mostrarPuntos();*/
+                juego();*/
+                sumarPaso();
+                /*mostrarPuntos();*/
 
                 puntos[0]=25;
                 ronda++;
@@ -103,8 +107,7 @@ public class Server {
             players.get((jugadorMano+i)%4).mandarMensaje("Quieres mus? (mus/no)");
             respuesta=players.get((jugadorMano+i)%4).leerMensaje();
             if(respuesta!="mus") {
-                mandarATodos("Jugador "+(jugadorMano+1)+" ha cortado el mus");
-                jugadorMano=ronda;
+                mandarATodos("Jugador "+((jugadorMano+i)%4+1)+" ha cortado el mus");
                 return;
             }
         }
@@ -125,24 +128,55 @@ public class Server {
         mus();        
     }
 
+    private static void ordenarManos(){
+        for(int i=0;i<4;i++){
+            manosJugadores.get(i).sort(Comparator.comparingInt(Card::getValorNumerico).reversed());
+        }
+    }
+
     private static void grande(){
         grandeAlPaso=true;
         apuesta=1;
+        envido=0;
         ordago=false;
         int i=0;
-        String mensaje="Que quieres hacer:\r\n";
-        mensaje+="Pasar: \"paso\" \r\n";
-        mensaje+="Envidar: \"envido\" \r\n";
-        mensaje+="Envidar x: \"envidoX\" \r\n";
-        mensaje+="Órgdago: \"ordago\" \r\n";
+        String respuesta;
+        String mensaje0="Que quieres hacer:\r\n";
+        mensaje0+="Pasar: \"paso\" \r\n";
+        mensaje0+="Envidar: \"envido\" \r\n";
+        mensaje0+="Envidar x: \"envido X\" \r\n";
+        mensaje0+="Órgdago: \"ordago\" \r\n";
+
+        String mensaje1="Que quieres hacer:\r\n";
+        mensaje1+="No querer: \"no\" \r\n";
+        mensaje1+="Querer: \"quiero\" \r\n";
+        mensaje1+="Envidar x más: \"envido X\" \r\n";
+        mensaje1+="Órgdago: \"ordago\" \r\n";
 
         mandarATodos("Jugando grande\r\n");
 
-        while(grandeAlPaso){
-            
-            players.get((jugadorMano+i)%4).mandarMensaje("null");
-
+        while(grandeAlPaso && i<4){            
+            players.get((jugadorMano+i)%4).mandarMensaje(mensaje0);
+            respuesta=players.get((jugadorMano+i)%4).leerMensaje();
+            i++;
+            if(respuesta=="ordago"){
+                grandeAlPaso=false;
+                apuesta=25;
+                ordago=true;
+            }else if(respuesta=="envido"){
+                grandeAlPaso=false;
+                envido=2;
+            }else if(respuesta.startsWith("envido ")){
+                grandeAlPaso=false;
+                try{envido=Integer.parseInt(respuesta.split(" ")[1]);}
+                catch(Exception e){mandarATodos("Jugador "+ ((jugadorMano+i)%4) +" ha pasado\r\n");}                
+            }else{
+                mandarATodos("Jugador "+ ((jugadorMano+i)%4) +" ha pasado\r\n");
+            }
         }
+        if (grandeAlPaso) return;
+
+        
     }
 
     private static int getValorCarta(Card card) {
@@ -180,6 +214,13 @@ public class Server {
             case "Caballo": return 10;
             case "Rey": return 10;
             default: return 0;
+        }
+    }
+
+    private static void sumarPaso(){
+        if(grandeAlPaso){
+            int[] todos=new int[4];
+            for (int i=0;i<4;i++){todos[i]=i;}
         }
     }
 
