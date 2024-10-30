@@ -14,9 +14,15 @@ public class Server {
     private static int[] puntos=new int[2];
     private static int ronda=0;
     private static int jugadorMano=0;
-    private static  int apuesta;           // Apuesta actual en la ronda
+    private static  int apuesta=0;           // Apuesta actual en la ronda
     private static int ganador;         // ID del jugador que inició la última apuesta
-    private boolean ordago;            // Si se ha echado un órdago
+    private static boolean ordago=false;            // Si se ha echado un órdago
+    private static boolean grandeAlPaso=true;
+    private static boolean pequenaAlPaso=true;
+    private static boolean paresAlPaso=true;
+    private static boolean puntoAlPaso=true;    
+    private static boolean juegoAlPaso=true;
+    
     
     public static void main(String[] args){
         try(ServerSocket ss= new ServerSocket(55555)){
@@ -39,8 +45,8 @@ public class Server {
                 mandarATodos("Ronda "+(ronda+1)+", jugador "+(ronda+1)+" va de mano");
                 repartir();
                 mus();
-                /*grande();
-                pequena();
+                grande();
+                /*pequena();
                 pares();
                 juego();
                 mostrarPuntos();*/
@@ -117,6 +123,26 @@ public class Server {
             mandarMano((jugadorMano+i)%4);
         }
         mus();        
+    }
+
+    private static void grande(){
+        grandeAlPaso=true;
+        apuesta=1;
+        ordago=false;
+        int i=0;
+        String mensaje="Que quieres hacer:\r\n";
+        mensaje+="Pasar: \"paso\" \r\n";
+        mensaje+="Envidar: \"envido\" \r\n";
+        mensaje+="Envidar x: \"envidoX\" \r\n";
+        mensaje+="Órgdago: \"ordago\" \r\n";
+
+        mandarATodos("Jugando grande\r\n");
+
+        while(grandeAlPaso){
+            
+            players.get((jugadorMano+i)%4).mandarMensaje("null");
+
+        }
     }
 
     private static int getValorCarta(Card card) {
