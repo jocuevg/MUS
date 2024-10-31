@@ -34,6 +34,20 @@ public class Card {
 
         return valorMap.getOrDefault(valor, 0);
     }
+    public int getPuntos() {
+        Map<String, Integer> valorMap = new HashMap<>();
+        valorMap.put("As", 1);
+        valorMap.put("Tres", 3);
+        valorMap.put("Cuatro", 4);
+        valorMap.put("Cinco", 5);
+        valorMap.put("Seis", 6);
+        valorMap.put("Siete", 7);
+        valorMap.put("Sota", 10);
+        valorMap.put("Caballo", 10);
+        valorMap.put("Rey", 10);
+
+        return valorMap.getOrDefault(valor, 0);
+    }
 
     @Override
     public String toString() {
