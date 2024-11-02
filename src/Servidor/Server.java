@@ -15,14 +15,15 @@ public class Server {
     private static int[] puntos=new int[2];
     private static int ronda=0;
     private static int jugadorMano=0;
-    private static int jugadorActual;
-    private static int apuestaActual;
-    private static boolean envidoActivo;
-    private static boolean grandeAlPaso;
-    private static boolean pequenaAlPaso;
-    private static boolean paresAlPaso;
-    private static boolean puntoAlPaso;    
-    private static boolean juegoAlPaso;
+    private static int apuesta=0;
+    private static int envido=0;            
+    private static int ganador;         
+    private static boolean ordago=false;            
+    private static boolean grandeAlPaso=true;
+    private static boolean pequenaAlPaso=true;
+    private static boolean paresAlPaso=true;
+    private static boolean puntoAlPaso=true;    
+    private static boolean juegoAlPaso=true;
     
     
     public static void main(String[] args){
@@ -48,15 +49,9 @@ public class Server {
                 mus();
                 ordenarManos();
                 grande();
-                if(Math.max(puntos[0], puntos[1])>=25){
-                    if(puntos[0]>=25){
-                        mandarATodos("Pareja 1 ha ganado");
-                    }else{
-                        mandarATodos("Pareja 2 ha ganado");
-                    }
-                }
-                /*pequena();
+                pequena(); 
                 pares();
+                /*
                 juego();*/
                 sumarPaso();
                 /*mostrarPuntos();*/
@@ -112,7 +107,7 @@ public class Server {
         for(int i=0;i<4;i++){
             players.get((jugadorMano+i)%4).mandarMensaje("Quieres mus? (mus/no)");
             respuesta=players.get((jugadorMano+i)%4).leerMensaje();
-            if(!respuesta.equals("mus")) {
+            if(respuesta!="mus") {
                 mandarATodos("Jugador "+((jugadorMano+i)%4+1)+" ha cortado el mus");
                 return;
             }
@@ -141,218 +136,181 @@ public class Server {
     }
 
     private static void grande(){
-        grandeAlPaso=false;
-        jugadorActual=jugadorMano;
-        apuestaActual=1;
-        envidoActivo=true;
-
-        mandarATodos("Jugando grande\r\n");
-
+        grandeAlPaso=true;
+        apuesta=1;
+        envido=0;
+        ordago=false;
+        int i=0;
         String respuesta;
-
         String mensaje0="Que quieres hacer:\r\n";
         mensaje0+="Pasar: \"paso\" \r\n";
         mensaje0+="Envidar: \"envido\" \r\n";
         mensaje0+="Envidar x: \"envido X\" \r\n";
-        mensaje0+="Orgdago: \"ordago\" \r\n";
+        mensaje0+="Órgdago: \"ordago\" \r\n";
 
         String mensaje1="Que quieres hacer:\r\n";
         mensaje1+="No querer: \"no\" \r\n";
         mensaje1+="Querer: \"quiero\" \r\n";
-        mensaje1+="Envidar X más: \"envido X\" \r\n";
-        mensaje1+="Orgdago: \"ordago\" \r\n";
+        mensaje1+="Envidar x más: \"envido X\" \r\n";
+        mensaje1+="Órgdago: \"ordago\" \r\n";
 
+        mandarATodos("Jugando grande\r\n");
 
-        while(envidoActivo && !grandeAlPaso){     
-            Player jugador= players.get(jugadorActual);
-            jugador.mandarMensaje(mensaje0);
-
-            respuesta=jugador.leerMensaje();
-
-            if(respuesta.equalsIgnoreCase("ordago")){
-                envidoActivo=resolverOrdagoGrande(jugadorActual,apuestaActual);
-                break;
-            }else if(respuesta.equalsIgnoreCase("envido")){
+        while(grandeAlPaso && i<4){            
+            players.get((jugadorMano+i)%4).mandarMensaje(mensaje0);
+            respuesta=players.get((jugadorMano+i)%4).leerMensaje();
+            i++;
+            if(respuesta=="ordago"){
                 grandeAlPaso=false;
-                apuestaActual=2;
-                envidoActivo=gestionarRespuestaEnvidoGrande(jugadorActual,apuestaActual,mensaje1);
+                apuesta=25;
+                ordago=true;
+            }else if(respuesta=="envido"){
+                grandeAlPaso=false;
+                envido=2;
             }else if(respuesta.startsWith("envido ")){
-                try{
-                    apuestaActual=Integer.parseInt(respuesta.split(" ")[1]);
-                    grandeAlPaso=false;
-                    envidoActivo=gestionarRespuestaEnvidoGrande(jugadorActual, apuestaActual, mensaje1);
-                }
-                catch(Exception e){
-                    grandeAlPaso = todosPasaron(jugadorActual);
-                }                
+                grandeAlPaso=false;
+                try{envido=Integer.parseInt(respuesta.split(" ")[1]);}
+                catch(Exception e){mandarATodos("Jugador "+ ((jugadorMano+i)%4) +" ha pasado\r\n");}                
             }else{
-                grandeAlPaso = todosPasaron(jugadorActual);
+                mandarATodos("Jugador "+ ((jugadorMano+i)%4) +" ha pasado\r\n");
             }
-            jugadorActual = (jugadorActual + 1) % 4;
         }
-        if (grandeAlPaso) {
-            mandarATodos("Todos han pasado");
-        }        
+        if (grandeAlPaso) return;
+
+        
     }
 
-    private static boolean gestionarRespuestaEnvidoGrande(int jugador, int apuestaActual, String mensaje1) {
-        mandarATodos("Jugador " + (jugador%4 + 1) + " ha envidado " + apuestaActual + " puntos.");
+    private static void pequena(){
+        pequenaAlPaso=true;
+        apuesta=1;
+        envido=0;
+        ordago=false;
+        int i=0;
+        String respuesta;
+        String mensaje0="Que quieres hacer:\r\n";
+        mensaje0+="Pasar: \"paso\" \r\n";
+        mensaje0+="Envidar: \"envido\" \r\n";
+        mensaje0+="Envidar x: \"envido X\" \r\n";
+        mensaje0+="Órgdago: \"ordago\" \r\n";
 
-        players.get((jugador+1)%4).mandarMensaje(mensaje1);
-        String respuesta = players.get((jugador+1)%4).leerMensaje();
-        if (respuesta.equalsIgnoreCase("quiero")) {
-            mandarATodos("Jugador " + ((jugador+1)%4+1) + " ha aceptado el envido.");
-            puntos[getGanadorGrande()%2] += apuestaActual; // Se suman los puntos al equipo contrario
-            return false; // Termina el envido
-        } else if (respuesta.startsWith("envido ")) {
-            try {
-                int nuevaApuesta = apuestaActual+Integer.parseInt(respuesta.split(" ")[1]);
-                mandarATodos("Jugador " + ((jugador+1)%4+1) + " ha aumentado el envido a " + nuevaApuesta + " puntos.");
-                apuestaActual = nuevaApuesta;
-                gestionarRespuestaEnvidoGrande((jugador+1)%4, apuestaActual, mensaje1);
-                return false; // Continúa el envido con la nueva apuesta
-            } catch (NumberFormatException e) {
-                mandarATodos("Jugador " + ((jugador+1)%4+1) + " ha aceptado el envido.");
-                puntos[getGanadorGrande()%2] += apuestaActual; // Se suman los puntos al equipo contrario
-                return false; // Termina el envido
-            }
-        } else if (respuesta.equalsIgnoreCase("ordago")){
-            return resolverOrdagoGrande((jugador+1)%4,apuestaActual);
-        }else {
-            mandarATodos("Jugador " + ((jugador+1)%4+1) + " ha rechazado el envido.");
+        String mensaje1="Que quieres hacer:\r\n";
+        mensaje1+="No querer: \"no\" \r\n";
+        mensaje1+="Querer: \"quiero\" \r\n";
+        mensaje1+="Envidar x más: \"envido X\" \r\n";
+        mensaje1+="Órgdago: \"ordago\" \r\n";
 
-            players.get((jugador+3)%4).mandarMensaje(mensaje1);
-            respuesta = players.get((jugador+3)%4).leerMensaje();
+        mandarATodos("Jugando pequena\r\n");
 
-            if (respuesta.equalsIgnoreCase("quiero")) {
-                mandarATodos("Jugador " + ((jugador+3)%4+1) + " ha aceptado el envido.");
-                puntos[getGanadorGrande()%2] += apuestaActual; // Se suman los puntos al equipo contrario
-                return false; // Termina el envido
-            } else if (respuesta.startsWith("envido ")) {
-                try {
-                    int nuevaApuesta = apuestaActual+Integer.parseInt(respuesta.split(" ")[1]);
-                    mandarATodos("Jugador " + ((jugador+3)%4+1) + " ha aumentado el envido a " + nuevaApuesta + " puntos.");
-                    apuestaActual = nuevaApuesta;
-                    gestionarRespuestaEnvidoGrande((jugador+3)%4, apuestaActual, mensaje1);
-                    return false; // Continúa el envido con la nueva apuesta
-                } catch (NumberFormatException e) {
-                    mandarATodos("Jugador " + ((jugador+3)%4+1) + " ha aceptado el envido.");
-                    puntos[getGanadorGrande()%2] += apuestaActual; // Se suman los puntos al equipo contrario
-                    return false; // Termina el envido
-                }
-            } else if (respuesta.equalsIgnoreCase("ordago")){
-                return resolverOrdagoGrande((jugador+3)%4,apuestaActual);
+        while(pequenaAlPaso && i<4){            
+            players.get((jugadorMano+i)%4).mandarMensaje(mensaje0);
+            respuesta=players.get((jugadorMano+i)%4).leerMensaje();
+            i++;
+            if(respuesta=="ordago"){
+                pequenaAlPaso=false;
+                apuesta=25;
+                ordago=true;
+            }else if(respuesta=="envido"){
+                pequenaAlPaso=false;
+                envido=2;
+            }else if(respuesta.startsWith("envido ")){
+                pequenaAlPaso=false;
+                try{envido=Integer.parseInt(respuesta.split(" ")[1]);}
+                catch(Exception e){mandarATodos("Jugador "+ ((jugadorMano+i)%4) +" ha pasado\r\n");}                
             }else{
-                mandarATodos("El envite fue rechazado.");
-                puntos[jugador%2]+=apuestaActual;
-                return false;
+                mandarATodos("Jugador "+ ((jugadorMano+i)%4) +" ha pasado\r\n");
             }
         }
+        if (pequenaAlPaso) return;
+
+        
     }
 
-    private static boolean todosPasaron(int jugadorActual) {
-        mandarATodos("Jugador " + (jugadorActual + 1)%4 + " ha pasado.");
-        return jugadorActual == (jugadorMano + 3) % 4;
-    }
+    private static void pares(){
+        paresAlPaso=true;
+        apuesta=1;
+        envido=0;
+        ordago=false;
+        int i=0;
+        String respuesta;
+        String mesajePares="¿Tienes pares?:\r\n";
+        String mensaje0="Que quieres hacer:\r\n";
+        mensaje0+="Pasar: \"paso\" \r\n";
+        mensaje0+="Envidar: \"envido\" \r\n";
+        mensaje0+="Envidar x: \"envido X\" \r\n";
+        mensaje0+="Órgdago: \"ordago\" \r\n";
 
-    private static boolean resolverOrdagoGrande(int jugador,int apuestaActual) {
-        mandarATodos("Jugador " + (jugador + 1) + " ha lanzado un ordago!");
-       
-        players.get((jugador+1)%4).mandarMensaje("¿Quieres el órdago? (si/no)");
-        String respuesta = players.get((jugador+1)%4).leerMensaje();
-        if (respuesta.equalsIgnoreCase("si")) {
-            mandarATodos("¡Órdago aceptado! Fin del juego.");
-            puntos[getGanadorGrande()%2] = 25; // Asigna los puntos al equipo ganador
-            return false;
-        }else{
-            mandarATodos("Jugador "+(jugador+2)%4+" no ha querido el ordago");
-            players.get((jugador+3)%4).mandarMensaje("¿Quieres el órdago? (si/no)");
-            respuesta = players.get((jugador+3)%4).leerMensaje();
-            if (respuesta.equalsIgnoreCase("si")) {
-                mandarATodos("¡Órdago aceptado! Fin del juego.");
-                puntos[getGanadorGrande()%2] = 25; // Asigna los puntos al equipo ganador
-                return false;
+        String mensaje1="Que quieres hacer:\r\n";
+        mensaje1+="No querer: \"no\" \r\n";
+        mensaje1+="Querer: \"quiero\" \r\n";
+        mensaje1+="Envidar x más: \"envido X\" \r\n";
+        mensaje1+="Órgdago: \"ordago\" \r\n";
+
+        mandarATodos("Jugando pares\r\n");
+
+        while(paresAlPaso && i<4){            
+            players.get((jugadorMano+i)%4).mandarMensaje(mensaje0);
+            respuesta=players.get((jugadorMano+i)%4).leerMensaje();
+            i++;
+            if(respuesta=="ordago"){
+                paresAlPaso=false;
+                apuesta=25;
+                ordago=true;
+            }else if(respuesta=="envido"){
+                paresAlPaso=false;
+                envido=2;
+            }else if(respuesta.startsWith("envido ")){
+                paresAlPaso=false;
+                try{envido=Integer.parseInt(respuesta.split(" ")[1]);}
+                catch(Exception e){mandarATodos("Jugador "+ ((jugadorMano+i)%4) +" ha pasado\r\n");}                
             }else{
-                mandarATodos("El órdago fue rechazado.");
-                puntos[jugador%2]+=apuestaActual;
-                return false;
+                mandarATodos("Jugador "+ ((jugadorMano+i)%4) +" ha pasado\r\n");
             }
         }
+        if (paresAlPaso) return;
     }
 
-    private static int getGanadorGrande() {
-        for (int i = 0; i < 4; i++) {
-            int manoGanadora = -1;
-            int valorMayor = -1;
-            jugadorActual=jugadorMano;
-            // Buscar la carta más alta en la posición i
-            for (int j = 0; j < 4; j++) {
-
-                int valorCarta = manosJugadores.get(jugadorActual).get(i).getValorNumerico();
-                if (valorCarta > valorMayor) {
-                    valorMayor = valorCarta;
-                    manoGanadora = jugadorActual;
-                } else if (valorCarta == valorMayor) {
-                    manoGanadora = -1; // Si hay empate en esta posición, seguimos comparando
-                }
-                jugadorActual=(jugadorActual+1)%4;
-            }
-
-            // Si hemos encontrado una mano ganadora en esta posición, retornamos
-            if (manoGanadora != -1) {
-                return manoGanadora;
-            }
+    private static int getValorCarta(Card card) {
+        switch (card.getValor()) {
+            case "As": return 1;
+            case "Tres": return 3;
+            case "Cuatro": return 4;
+            case "Cinco": return 5;
+            case "Seis": return 6;
+            case "Siete": return 7;
+            case "Sota": return 8;
+            case "Caballo": return 9;
+            case "Rey": return 10;
+            default: return 0;
         }
-
-        return jugadorMano;
-    }
-
-    private static int getGanadorPequeña() {
-        for (int i = 3; i >=0; i--) {
-            int manoGanadora = -1;
-            int valorMenor = 11;
-            jugadorActual=jugadorMano;
-            // Buscar la carta más alta en la posición i
-            for (int j = 0; j < 4; j++) {
-
-                int valorCarta = manosJugadores.get(jugadorActual).get(i).getValorNumerico();
-                if (valorCarta < valorMenor) {
-                    valorMenor = valorCarta;
-                    manoGanadora = jugadorActual;
-                } else if (valorCarta == valorMenor) {
-                    manoGanadora = 11; // Si hay empate en esta posición, seguimos comparando
-                }
-                jugadorActual=(jugadorActual+1)%4;
-            }
-
-            // Si hemos encontrado una mano ganadora en esta posición, retornamos
-            if (manoGanadora != 11) {
-                return manoGanadora;
-            }
-        }
-
-        return jugadorMano;
     }
 
     private static int getPuntosMano(List<Card> mano) {
         int totalValue = 0;
         for (Card card : mano) {
-            totalValue += card.getPuntos();
+            totalValue += getPuntosCarta(card);
         }
         return totalValue;
     }
 
+    private static int getPuntosCarta(Card card) {
+        switch (card.getValor()) {
+            case "As": return 1;
+            case "Tres": return 3;
+            case "Cuatro": return 4;
+            case "Cinco": return 5;
+            case "Seis": return 6;
+            case "Siete": return 7;
+            case "Sota": return 10;
+            case "Caballo": return 10;
+            case "Rey": return 10;
+            default: return 0;
+        }
+    }
+
     private static void sumarPaso(){
         if(grandeAlPaso){
-            puntos[getGanadorGrande()%2]++;
-        }if(pequenaAlPaso){
-            puntos[getGanadorPequeña()%2]++;
-        }if(paresAlPaso){
-            
-        }if(puntoAlPaso){
-            
-        }if(juegoAlPaso){
-            
+            int[] todos=new int[4];
+            for (int i=0;i<4;i++){todos[i]=i;}
         }
     }
 
