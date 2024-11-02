@@ -40,5 +40,8 @@ public class Player implements Runnable{
         }
         return mensaje;
     }
+    public int getId(){
+        return playerId;
+    }
 
 }
