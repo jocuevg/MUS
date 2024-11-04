@@ -300,6 +300,38 @@ public class Server {
         mensaje1 += "Querer: \"quiero\" \r\n";
         mensaje1 += "Envidar x más: \"envido X\" \r\n";
         mensaje1 += "Órgdago: \"ordago\" \r\n";
+
+        while (envidoActivo && !paresAlPaso) {
+            if (!conPares.containsKey(jugadorActual))
+                break; // Si no tiene pares jugadorActual
+            Player jugador = players.get(jugadorActual);
+            jugador.mandarMensaje(mensaje0);
+
+            respuesta = jugador.leerMensaje();
+
+            if (respuesta.equalsIgnoreCase("ordago")) {
+                envidoActivo = resolverOrdagoPares(jugadorActual, apuestaActual, conPares);
+                break;
+            } else if (respuesta.equalsIgnoreCase("envido")) {
+                paresAlPaso = false;
+                apuestaActual = 2;
+                // Envido pares metodo
+            } else if (respuesta.startsWith("envido ")) {
+                try {
+                    apuestaActual = Integer.parseInt(respuesta.split(" ")[1]);
+                    paresAlPaso = false;
+                    // Envido pares metodo
+                } catch (Exception e) {
+                    paresAlPaso = todosPasaron(jugadorActual);
+                }
+            } else {
+                paresAlPaso = todosPasaron(jugadorActual);
+            }
+            jugadorActual = (jugadorActual + 1) % 4;
+        }
+        if (paresAlPaso) {
+            mandarATodos("Todos han pasado");
+        }
     }
 
     private static boolean gestionarRespuestaEnvidoGrande(int jugador, int apuestaActual, String mensaje1) {
@@ -471,6 +503,48 @@ public class Server {
         }
     }
 
+    private static boolean resolverOrdagoPares(int jugador, int apuestaActual, Map<Integer, List<Card>> conPares) {
+        mandarATodos("Jugador " + (jugador + 1) + " ha lanzado un ordago!");
+
+        if (conPares.containsKey((jugador + 1) % 4)) {
+            players.get((jugador + 1) % 4).mandarMensaje("¿Quieres el órdago? (si/no)");
+            String respuesta = players.get((jugador + 1) % 4).leerMensaje();
+            if (respuesta.equalsIgnoreCase("si")) {
+                mandarATodos("¡Órdago aceptado! Fin del juego.");
+                puntos[getGanadorPares() % 2] = 25; // Asigna los puntos al equipo ganador
+                return false;
+            } else {
+                if (conPares.containsKey((jugador + 3) % 4)) {
+                    mandarATodos("Jugador " + (jugador + 2) % 4 + " no ha querido el ordago");
+                    players.get((jugador + 3) % 4).mandarMensaje("¿Quieres el órdago? (si/no)");
+                    respuesta = players.get((jugador + 3) % 4).leerMensaje();
+                    if (respuesta.equalsIgnoreCase("si")) {
+                        mandarATodos("¡Órdago aceptado! Fin del juego.");
+                        puntos[getGanadorPares() % 2] = 25; // Asigna los puntos al equipo ganador
+                        return false;
+                    } else {
+                        mandarATodos("El órdago fue rechazado.");
+                        puntos[jugador % 2] += apuestaActual;
+                        return false;
+                    }
+                }
+            }
+        } else {
+            mandarATodos("Jugador " + (jugador + 2) % 4 + " no ha querido el ordago");
+            players.get((jugador + 3) % 4).mandarMensaje("¿Quieres el órdago? (si/no)");
+            String respuesta = players.get((jugador + 3) % 4).leerMensaje();
+            if (respuesta.equalsIgnoreCase("si")) {
+                mandarATodos("¡Órdago aceptado! Fin del juego.");
+                puntos[getGanadorPares() % 2] = 25; // Asigna los puntos al equipo ganador
+                return false;
+            } else {
+                mandarATodos("El órdago fue rechazado.");
+                puntos[jugador % 2] += apuestaActual;
+                return false;
+            }
+        }return false;
+    }
+
     private static int getGanadorGrande() {
         for (int i = 0; i < 4; i++) {
             int manoGanadora = -1;
@@ -553,10 +627,10 @@ public class Server {
             int valor = carta.getValorNumerico();
             contadorValores.put(valor, contadorValores.getOrDefault(valor, 0) + 1);
         }
-    
+
         boolean tieneDuples = contadorValores.containsValue(2) && contadorValores.size() == 2;
         boolean tieneMedias = contadorValores.containsValue(3);
-    
+
         if (tieneDuples) {
             return 3; // Duples
         }
@@ -565,7 +639,6 @@ public class Server {
         }
         return 1; // Pares
     }
-    
 
     // Método para comparar las manos de jugadores con el mismo tipo de pares
     private static int compararValoresPares(int jugador1, int jugador2) {
@@ -576,13 +649,13 @@ public class Server {
         // mano2.sort((c1, c2) -> c2.getValorNumerico() - c1.getValorNumerico());
 
         // for (int i = 0; i < Math.min(mano1.size(), mano2.size()); i++) {
-        //     int valor1 = mano1.get(i).getValorNumerico();
-        //     int valor2 = mano2.get(i).getValorNumerico();
-        //     if (valor1 != valor2) {
-        //         return valor1 > valor2 ? jugador1 : jugador2;
-        //     }
+        // int valor1 = mano1.get(i).getValorNumerico();
+        // int valor2 = mano2.get(i).getValorNumerico();
+        // if (valor1 != valor2) {
+        // return valor1 > valor2 ? jugador1 : jugador2;
         // }
-         return jugadorMano; // En caso de empate total, gana el jugador mano
+        // }
+        return jugadorMano; // En caso de empate total, gana el jugador mano
     }
 
     private static int getPuntosMano(List<Card> mano) {
