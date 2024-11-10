@@ -15,6 +15,7 @@ public class Server {
     private static List<Card> mazo = new ArrayList<>();
     private static List<List<Card>> manosJugadores = new ArrayList<>();
     private static Map<Integer, List<Card>> conPares = new HashMap<>();
+    private static Map<Integer, List<Card>> conJuego = new HashMap<>();
     private static int[] puntos = new int[2];
     private static int ronda = 0;
     private static int jugadorMano = 0;
@@ -755,6 +756,33 @@ public class Server {
         return jugadorMano;
     }
 
+    private static int[] getGanadorJuego() {
+        int jugadorGanador = -1;
+        int mejorvalorJuego = -1;
+        int mejorJuego=-1;
+
+        for (Map.Entry<Integer, List<Card>> entry : conJuego.entrySet()) {
+            int jugador = entry.getKey();
+            List<Card> mano = entry.getValue();
+            int juego=getPuntosMano(mano);
+            int valorJuego = getValorJuego(mano);
+
+            // Comparar el tipo de pares del jugador actual con el mejor encontrado hasta ahora
+            if (valorJuego > mejorvalorJuego) {
+                mejorvalorJuego = valorJuego;
+                mejorJuego=juego;
+                jugadorGanador = jugador;
+            }
+        }
+        int cantidadGanada = mejorJuego==31 ? 3 : 2;
+
+        int compaGanador=(jugadorGanador+2)%4;
+        if(conJuego.get(compaGanador)==null) return new int[]{jugadorGanador,cantidadGanada};
+
+        cantidadGanada += getPuntosMano(conJuego.get(compaGanador)) ==31 ? 3 :2;
+        return new int[]{jugadorGanador,cantidadGanada};  
+    }
+
     // Método para clasificar el tipo de pares en la mano: 3 = duples, 2 = medias, 1 = pares
     private static int evaluarTipoPares(List<Card> mano) {
         Map<Integer, Integer> contadorValores = new HashMap<>();
@@ -826,6 +854,22 @@ public class Server {
             totalValue += card.getPuntos();
         }
         return totalValue;
+    }
+
+    private static int getValorJuego(List<Card> mano){
+        Map<Integer, Integer> valorMap = new HashMap<>();
+        valorMap.put(33, 1);
+        valorMap.put(34, 3);
+        valorMap.put(35, 4);
+        valorMap.put(36, 5);
+        valorMap.put(37, 6);
+        valorMap.put(38, 7);
+        valorMap.put(39, 8);
+        valorMap.put(40,9);
+        valorMap.put(32, 10);
+        valorMap.put(31, 11);
+
+        return valorMap.getOrDefault(getPuntosMano(mano), 0);
     }
 
     private static void sumarPaso() {
