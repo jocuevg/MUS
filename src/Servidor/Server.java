@@ -738,6 +738,23 @@ public class Server {
         return new int[]{jugadorGanador,mejorTipoPares};        
     }
 
+    private static int getGanadorPunto() {
+        int manoGanadora = -1;
+        int valorMayor = -1;
+        jugadorActual = jugadorMano;
+
+        for (int i = 0; i < 4; i++) {
+            int valorMano = getPuntosMano(manosJugadores.get(jugadorActual));
+            if (valorMano > valorMayor) {
+                valorMayor = valorMano;
+                manoGanadora = jugadorActual;
+            }
+            jugadorActual = (jugadorActual + 1) % 4;
+        }
+
+        return jugadorMano;
+    }
+
     // Método para clasificar el tipo de pares en la mano: 3 = duples, 2 = medias, 1 = pares
     private static int evaluarTipoPares(List<Card> mano) {
         Map<Integer, Integer> contadorValores = new HashMap<>();
