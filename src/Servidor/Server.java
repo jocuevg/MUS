@@ -1110,7 +1110,7 @@ public class Server {
             jugadorActual = (jugadorActual + 1) % 4;
         }
 
-        return jugadorMano;
+        return manoGanadora;
     }
 
     private static int[] getGanadorJuego() {
