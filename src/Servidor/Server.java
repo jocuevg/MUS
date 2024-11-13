@@ -204,6 +204,7 @@ public class Server {
 
         while (envidoActivo && !grandeAlPaso) {
             Player jugador = players.get(jugadorActual);
+            mandarMano(jugadorActual);
             jugador.mandarMensaje(mensaje0);
 
             respuesta = jugador.leerMensaje();
@@ -257,6 +258,7 @@ public class Server {
 
         while (envidoActivo && !pequenaAlPaso) {
             Player jugador = players.get(jugadorActual);
+            mandarMano(jugadorActual);
             jugador.mandarMensaje(mensaje0);
 
             respuesta = jugador.leerMensaje();
@@ -349,6 +351,7 @@ public class Server {
                 continue; // Si no tiene pares jugadorActual
             }
             Player jugador = players.get(jugadorActual);
+            mandarMano(jugadorActual);
             jugador.mandarMensaje(mensaje0);
 
             respuesta = jugador.leerMensaje();
@@ -444,6 +447,7 @@ public class Server {
                 continue; // Si no tiene juego jugadorActual
             }
             Player jugador = players.get(jugadorActual);
+            mandarMano(jugadorActual);
             jugador.mandarMensaje(mensaje0);
 
             respuesta = jugador.leerMensaje();
@@ -497,6 +501,7 @@ public class Server {
 
         while (envidoActivo && !puntoAlPaso) {
             Player jugador = players.get(jugadorActual);
+            mandarMano(jugadorActual);
             jugador.mandarMensaje(mensaje0);
 
             respuesta = jugador.leerMensaje();
@@ -528,7 +533,8 @@ public class Server {
 
     private static boolean gestionarRespuestaEnvidoGrande(int jugador, int apuestaActual, String mensaje1) {
         mandarATodos("Jugador " + (jugador % 4 + 1) + " ha envidado " + apuestaActual + " puntos.");
-
+        
+        mandarMano((jugador + 1) % 4);
         players.get((jugador + 1) % 4).mandarMensaje(mensaje1);
         String respuesta = players.get((jugador + 1) % 4).leerMensaje();
         if (respuesta.equalsIgnoreCase("quiero")) {
@@ -552,7 +558,8 @@ public class Server {
             return resolverOrdagoGrande((jugador + 1) % 4, apuestaActual);
         } else {
             mandarATodos("Jugador " + ((jugador + 1) % 4 + 1) + " ha rechazado el envido.");
-
+            
+            mandarMano((jugador + 3) % 4);
             players.get((jugador + 3) % 4).mandarMensaje(mensaje1);
             respuesta = players.get((jugador + 3) % 4).leerMensaje();
 
@@ -586,6 +593,7 @@ public class Server {
     private static boolean gestionarRespuestaEnvidoPequena(int jugador, int apuestaActual, String mensaje1) {
         mandarATodos("Jugador " + (jugador % 4 + 1) + " ha envidado " + apuestaActual + " puntos.");
 
+        mandarMano((jugador + 1) % 4);
         players.get((jugador + 1) % 4).mandarMensaje(mensaje1);
         String respuesta = players.get((jugador + 1) % 4).leerMensaje();
         if (respuesta.equalsIgnoreCase("quiero")) {
@@ -610,6 +618,7 @@ public class Server {
         } else {
             mandarATodos("Jugador " + ((jugador + 1) % 4 + 1) + " ha rechazado el envido.");
 
+            mandarMano((jugador + 3) % 4);
             players.get((jugador + 3) % 4).mandarMensaje(mensaje1);
             respuesta = players.get((jugador + 3) % 4).leerMensaje();
 
@@ -645,6 +654,7 @@ public class Server {
         String respuesta;
 
         if (conPares.containsKey((jugador + 1) % 4)) {
+            mandarMano((jugador + 1) % 4);
             players.get((jugador + 1) % 4).mandarMensaje(mensaje1);
             respuesta = players.get((jugador + 1) % 4).leerMensaje();
             if (respuesta.equalsIgnoreCase("quiero")) {
@@ -671,6 +681,7 @@ public class Server {
             }
         }
         if (conPares.containsKey((jugador + 3) % 4)) {
+            mandarMano((jugador + 3) % 4);
             players.get((jugador + 3) % 4).mandarMensaje(mensaje1);
             respuesta = players.get((jugador + 3) % 4).leerMensaje();
 
@@ -721,6 +732,7 @@ public class Server {
         String respuesta;
 
         if (conJuego.containsKey((jugador + 1) % 4)) {
+            mandarMano((jugador + 1) % 4);
             players.get((jugador + 1) % 4).mandarMensaje(mensaje1);
             respuesta = players.get((jugador + 1) % 4).leerMensaje();
             if (respuesta.equalsIgnoreCase("quiero")) {
@@ -747,6 +759,7 @@ public class Server {
             }
         }
         if (conJuego.containsKey((jugador + 3) % 4)) {
+            mandarMano((jugador + 3) % 4);
             players.get((jugador + 3) % 4).mandarMensaje(mensaje1);
             respuesta = players.get((jugador + 3) % 4).leerMensaje();
 
@@ -795,6 +808,7 @@ public class Server {
     private static boolean gestionarRespuestaEnvidoPunto(int jugador, int apuestaActual, String mensaje1) {
         mandarATodos("Jugador " + (jugador % 4 + 1) + " ha envidado " + apuestaActual + " puntos.");
 
+        mandarMano((jugador + 1) % 4);
         players.get((jugador + 1) % 4).mandarMensaje(mensaje1);
         String respuesta = players.get((jugador + 1) % 4).leerMensaje();
         if (respuesta.equalsIgnoreCase("quiero")) {
@@ -819,6 +833,7 @@ public class Server {
         } else {
             mandarATodos("Jugador " + ((jugador + 1) % 4 + 1) + " ha rechazado el envido.");
 
+            mandarMano((jugador + 3) % 4);
             players.get((jugador + 3) % 4).mandarMensaje(mensaje1);
             respuesta = players.get((jugador + 3) % 4).leerMensaje();
 
@@ -857,6 +872,7 @@ public class Server {
     private static boolean resolverOrdagoGrande(int jugador, int apuestaActual) {
         mandarATodos("Jugador " + (jugador + 1) + " ha lanzado un ordago!");
 
+        mandarMano((jugador + 1) % 4);
         players.get((jugador + 1) % 4).mandarMensaje("Quieres el ordago? (si/no)");
         String respuesta = players.get((jugador + 1) % 4).leerMensaje();
         if (respuesta.equalsIgnoreCase("si")) {
@@ -865,6 +881,7 @@ public class Server {
             return false;
         } else {
             mandarATodos("Jugador " + ((jugador + 1) % 4 +1)+ " no ha querido el ordago");
+            mandarMano((jugador + 3) % 4);
             players.get((jugador + 3) % 4).mandarMensaje("Quieres el ordago? (si/no)");
             respuesta = players.get((jugador + 3) % 4).leerMensaje();
             if (respuesta.equalsIgnoreCase("si")) {
@@ -882,6 +899,7 @@ public class Server {
     private static boolean resolverOrdagoPequena(int jugador, int apuestaActual) {
         mandarATodos("Jugador " + (jugador + 1) + " ha lanzado un ordago!");
 
+        mandarMano((jugador + 1) % 4);
         players.get((jugador + 1) % 4).mandarMensaje("Quieres el ordago? (si/no)");
         String respuesta = players.get((jugador + 1) % 4).leerMensaje();
         if (respuesta.equalsIgnoreCase("si")) {
@@ -890,6 +908,7 @@ public class Server {
             return false;
         } else {
             mandarATodos("Jugador " + ((jugador + 1) % 4+1) + " no ha querido el ordago");
+            mandarMano((jugador + 3) % 4);
             players.get((jugador + 3) % 4).mandarMensaje("Quieres el ordago? (si/no)");
             respuesta = players.get((jugador + 3) % 4).leerMensaje();
             if (respuesta.equalsIgnoreCase("si")) {
@@ -909,6 +928,7 @@ public class Server {
         String respuesta;
 
         if (conPares.containsKey((jugador + 1) % 4)) {
+            mandarMano((jugador + 1) % 4);
             players.get((jugador + 1) % 4).mandarMensaje("Quieres el ordago? (si/no)");
             respuesta = players.get((jugador + 1) % 4).leerMensaje();
             if (respuesta.equalsIgnoreCase("si")) {
@@ -920,6 +940,7 @@ public class Server {
             }
         }
         if (conPares.containsKey((jugador + 3) % 4)) {
+            mandarMano((jugador + 3) % 4);
             players.get((jugador + 3) % 4).mandarMensaje("Quieres el ordago? (si/no)");
             respuesta = players.get((jugador + 3) % 4).leerMensaje();
             if (respuesta.equalsIgnoreCase("si")) {
@@ -954,6 +975,7 @@ public class Server {
         String respuesta;
 
         if (conJuego.containsKey((jugador + 1) % 4)) {
+            mandarMano((jugador + 1) % 4);
             players.get((jugador + 1) % 4).mandarMensaje("Quieres el ordago? (si/no)");
             respuesta = players.get((jugador + 1) % 4).leerMensaje();
             if (respuesta.equalsIgnoreCase("si")) {
@@ -965,6 +987,7 @@ public class Server {
             }
         }
         if (conJuego.containsKey((jugador + 3) % 4)) {
+            mandarMano((jugador + 3) % 4);
             players.get((jugador + 3) % 4).mandarMensaje("Quieres el ordago? (si/no)");
             respuesta = players.get((jugador + 3) % 4).leerMensaje();
             if (respuesta.equalsIgnoreCase("si")) {
@@ -997,6 +1020,7 @@ public class Server {
     private static boolean resolverOrdagoPunto(int jugador, int apuestaActual) {
         mandarATodos("Jugador " + (jugador + 1) + " ha lanzado un ordago!");
 
+        mandarMano((jugador + 1) % 4);
         players.get((jugador + 1) % 4).mandarMensaje("Quieres el ordago? (si/no)");
         String respuesta = players.get((jugador + 1) % 4).leerMensaje();
         if (respuesta.equalsIgnoreCase("si")) {
@@ -1005,6 +1029,7 @@ public class Server {
             return false;
         } else {
             mandarATodos("Jugador " + ((jugador + 1) % 4 +1)+ " no ha querido el ordago");
+            mandarMano((jugador + 3) % 4);
             players.get((jugador + 3) % 4).mandarMensaje("Quieres el ordago? (si/no)");
             respuesta = players.get((jugador + 3) % 4).leerMensaje();
             if (respuesta.equalsIgnoreCase("si")) {
