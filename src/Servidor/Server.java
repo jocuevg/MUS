@@ -892,7 +892,7 @@ public class Server {
     }
 
     private static boolean todosPasaron(int jugadorActual) {
-        mandarATodos("Jugador " + (jugadorActual + 1) % 4 + " ha pasado.");
+        mandarATodos("Jugador " + ((jugadorActual) % 4)+1 + " ha pasado.");
         return jugadorActual == (jugadorMano + 3) % 4;
     }
 
@@ -1290,30 +1290,30 @@ public class Server {
 
     private static void sumarPaso() {
         if (grandeAlPaso) {
-            mandarATodos("Jugador "+(getGanadorGrande()+1)+" ha ganado grande al paso");
+            mandarATodos("Jugador "+(getGanadorGrande()+1)+" ha ganado grande al paso\r\n");
             puntos[getGanadorGrande() % 2]++;
         }
         if (pequenaAlPaso) {
-            mandarATodos("Jugador "+(getGanadorPequena()+1)+" ha ganado pequena al paso");
+            mandarATodos("Jugador "+(getGanadorPequena()+1)+" ha ganado pequena al paso\r\n");
             puntos[getGanadorPequena() % 2]++;
         }
         if (paresAlPaso) {
-            mandarATodos("Jugador "+(getGanadorPares()[0]+1)+" ha ganado pares al paso");
+            mandarATodos("Jugador "+(getGanadorPares()[0]+1)+" ha ganado pares al paso\r\n");
             puntos[getGanadorPares()[0] % 2]+=getGanadorPares()[1];
         }
         if (puntoAlPaso) {
-            mandarATodos("Jugador "+(getGanadorPunto()+1)+" ha ganado el punto al paso");
+            mandarATodos("Jugador "+(getGanadorPunto()+1)+" ha ganado el punto al paso\r\n");
             puntos[getGanadorPunto() %2]++;
         }
         if (juegoAlPaso) {
-            mandarATodos("Jugador "+(getGanadorJuego()[0]+1)+" ha ganado el juego al paso");
+            mandarATodos("Jugador "+(getGanadorJuego()[0]+1)+" ha ganado el juego al paso\r\n");
             puntos[getGanadorJuego()[0]%2]+=getGanadorJuego()[1];
         }
     }
 
     private static void mandarATodos(String mensaje) {
         for (int i = 0; i < 4; i++) {
-            players.get(i).mandarMensaje(mensaje);
+            players.get(i).mandarMensaje(mensaje+"\r\n");
         }
     }
 
