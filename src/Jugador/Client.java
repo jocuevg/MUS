@@ -21,6 +21,7 @@ public class Client {
                 try {
                     while ((response = in.readLine()) != null) {
                         System.out.println(response);
+                        if (response.equalsIgnoreCase("FIN")) break;
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
