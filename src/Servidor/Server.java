@@ -892,7 +892,7 @@ public class Server {
     }
 
     private static boolean todosPasaron(int jugadorActual) {
-        mandarATodos("Jugador " + ((jugadorActual) % 4)+1 + " ha pasado.");
+        mandarATodos("Jugador " + ((jugadorActual % 4)+1) + " ha pasado.");
         return jugadorActual == (jugadorMano + 3) % 4;
     }
 
