@@ -28,6 +28,7 @@ public class Player implements Runnable{
     public void mandarMensaje(String mensaje) {
         out.println(mensaje);
     }
+    @SuppressWarnings("deprecation")
     public String leerMensaje() {
         String mensaje="";
         try {
