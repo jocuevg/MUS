@@ -29,6 +29,9 @@ public class GameRoom implements Runnable {
 
     public GameRoom(List<Player> players) {
         GameRoom.players = players;
+        GameRoom.mazo = new ArrayList<>();
+        GameRoom.puntos = new int[2];
+        GameRoom.ronda = 0;
     }
 
     @Override
