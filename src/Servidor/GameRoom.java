@@ -9,39 +9,35 @@ import java.util.List;
 import java.util.Map;
 
 public class GameRoom implements Runnable {
-    private static List<Player> players;
-    private static List<Card> mazo;
-    private static int[] puntos;
-    private static int ronda;
-    private static List<List<Card>> manosJugadores = new ArrayList<>();
-    private static Map<Integer, List<Card>> conPares = new HashMap<>();
-    private static Map<Integer, List<Card>> conJuego = new HashMap<>();
-    private static int jugadorMano = 0;
-    private static int jugadorActual;
-    private static int apuestaActual;
-    private static int apuestaLanzada;
-    private static boolean envidoActivo;
-    private static boolean grandeAlPaso;
-    private static boolean pequenaAlPaso;
-    private static boolean paresAlPaso;
-    private static boolean puntoAlPaso;
-    private static boolean juegoAlPaso;
+    private List<Player> players;
+    private List<Card> mazo = new ArrayList<>();;
+    private int[] puntos =new int[2];
+    private int ronda=0;
+    private List<List<Card>> manosJugadores = new ArrayList<>();
+    private Map<Integer, List<Card>> conPares = new HashMap<>();
+    private Map<Integer, List<Card>> conJuego = new HashMap<>();
+    private int jugadorMano = 0;
+    private int jugadorActual;
+    private int apuestaActual;
+    private int apuestaLanzada;
+    private boolean envidoActivo;
+    private boolean grandeAlPaso;
+    private boolean pequenaAlPaso;
+    private boolean paresAlPaso;
+    private boolean puntoAlPaso;
+    private boolean juegoAlPaso;
 
     public GameRoom(List<Player> players) {
-        GameRoom.players = players;
-        GameRoom.mazo = new ArrayList<>();
-        GameRoom.puntos = new int[2];
-        GameRoom.ronda = 0;
+        this.players = players;
     }
 
     @Override
     public void run() {
         puntos[0] = 0;
         puntos[1] = 0;
-        List<List<Card>> manosJugadores = new ArrayList<>();
 
         for (int i = 0; i < 4; i++) {
-            manosJugadores.add(new ArrayList<>());
+            manosJugadores.add(new ArrayList<Card>());
         }
 
         while (Math.max(puntos[0], puntos[1]) < 25) {
@@ -84,7 +80,7 @@ public class GameRoom implements Runnable {
 
     }
 
-    private static void reiniciarCartas() {
+    private void reiniciarCartas() {
         mazo.clear();
         for (int i = 0; i < 4; i++) {
             manosJugadores.get(i).clear();
@@ -100,7 +96,7 @@ public class GameRoom implements Runnable {
         Collections.shuffle(mazo);
     }
 
-    private static void repartir() {
+    private void repartir() {
         int aux = ronda;
         for (int i = 0; i < 4; i++) {
             for (int j = manosJugadores.get(aux % 4).size(); j < 4; j++) {
@@ -112,7 +108,7 @@ public class GameRoom implements Runnable {
         }
     }
 
-    private static void mandarMano(int idPlayer) {
+    private void mandarMano(int idPlayer) {
         String mensaje = "Mano: \r\n";
         for (Card c : manosJugadores.get(idPlayer)) {
             mensaje += c.toString() + "\r\n";
@@ -120,7 +116,7 @@ public class GameRoom implements Runnable {
         players.get(idPlayer).mandarMensaje(mensaje);
     }
 
-    private static void mus() {
+    private void mus() {
         String respuesta;
         for (int i = 0; i < 4; i++) {
             players.get((jugadorMano + i) % 4).mandarMensaje("Quieres mus? (mus/no)");
@@ -150,13 +146,13 @@ public class GameRoom implements Runnable {
         mus();
     }
 
-    private static void ordenarManos() {
+    private void ordenarManos() {
         for (int i = 0; i < 4; i++) {
             manosJugadores.get(i).sort(Comparator.comparingInt(Card::getValorNumerico).reversed());
         }
     }
 
-    private static void grande() {
+    private void grande() {
         grandeAlPaso = false;
         jugadorActual = jugadorMano;
         apuestaActual = 1;
@@ -212,7 +208,7 @@ public class GameRoom implements Runnable {
         }
     }
 
-    private static void pequena() {
+    private void pequena() {
         pequenaAlPaso = false;
         jugadorActual = jugadorMano;
         apuestaActual = 1;
@@ -268,7 +264,7 @@ public class GameRoom implements Runnable {
         }
     }
 
-    private static void pares() {
+    private void pares() {
 
         jugadorActual = jugadorMano;
         Player player;
@@ -369,7 +365,7 @@ public class GameRoom implements Runnable {
         }
     }
 
-    private static void juego() {
+    private void juego() {
 
         jugadorActual = jugadorMano;
         Player player;
@@ -472,7 +468,7 @@ public class GameRoom implements Runnable {
         }
     }
 
-    private static void punto() {
+    private void punto() {
         puntoAlPaso = false;
         jugadorActual = jugadorMano;
         apuestaActual = 1;
@@ -528,7 +524,7 @@ public class GameRoom implements Runnable {
         }
     }
 
-    private static boolean gestionarRespuestaEnvidoGrande(int jugador, int apuestaActual, int apuestaLanzada,
+    private boolean gestionarRespuestaEnvidoGrande(int jugador, int apuestaActual, int apuestaLanzada,
             String mensaje1) {
         mandarATodos("Jugador " + (jugador % 4 + 1) + " ha envidado " + apuestaLanzada + " puntos.");
 
@@ -595,7 +591,7 @@ public class GameRoom implements Runnable {
         }
     }
 
-    private static boolean gestionarRespuestaEnvidoPequena(int jugador, int apuestaActual, int apuestaLanzada,
+    private boolean gestionarRespuestaEnvidoPequena(int jugador, int apuestaActual, int apuestaLanzada,
             String mensaje1) {
         mandarATodos("Jugador " + (jugador % 4 + 1) + " ha envidado " + apuestaLanzada + " puntos.");
 
@@ -662,7 +658,7 @@ public class GameRoom implements Runnable {
         }
     }
 
-    private static boolean gestionarRespuestaEnvidoPares(int jugador, int apuestaActual, int apuestaLanzada,
+    private boolean gestionarRespuestaEnvidoPares(int jugador, int apuestaActual, int apuestaLanzada,
             String mensaje1) {
         mandarATodos("Jugador " + (jugador % 4 + 1) + " ha envidado " + apuestaLanzada + " puntos.");
         String respuesta;
@@ -755,7 +751,7 @@ public class GameRoom implements Runnable {
         }
     }
 
-    private static boolean gestionarRespuestaEnvidoJuego(int jugador, int apuestaActual, int apuestaLanzada,
+    private boolean gestionarRespuestaEnvidoJuego(int jugador, int apuestaActual, int apuestaLanzada,
             String mensaje1) {
         mandarATodos("Jugador " + (jugador % 4 + 1) + " ha envidado " + apuestaLanzada + " puntos.");
         String respuesta;
@@ -846,7 +842,7 @@ public class GameRoom implements Runnable {
         }
     }
 
-    private static boolean gestionarRespuestaEnvidoPunto(int jugador, int apuestaActual, int apuestaLanzada,
+    private boolean gestionarRespuestaEnvidoPunto(int jugador, int apuestaActual, int apuestaLanzada,
             String mensaje1) {
         mandarATodos("Jugador " + (jugador % 4 + 1) + " ha envidado " + apuestaLanzada + " puntos.");
 
@@ -913,12 +909,12 @@ public class GameRoom implements Runnable {
         }
     }
 
-    private static boolean todosPasaron(int jugadorActual) {
+    private boolean todosPasaron(int jugadorActual) {
         mandarATodos("Jugador " + ((jugadorActual % 4) + 1) + " ha pasado.");
         return jugadorActual == (jugadorMano + 3) % 4;
     }
 
-    private static boolean resolverOrdagoGrande(int jugador, int apuestaActual) {
+    private boolean resolverOrdagoGrande(int jugador, int apuestaActual) {
         mandarATodos("Jugador " + (jugador + 1) + " ha lanzado un ordago!");
 
         mandarMano((jugador + 1) % 4);
@@ -946,7 +942,7 @@ public class GameRoom implements Runnable {
         }
     }
 
-    private static boolean resolverOrdagoPequena(int jugador, int apuestaActual) {
+    private boolean resolverOrdagoPequena(int jugador, int apuestaActual) {
         mandarATodos("Jugador " + (jugador + 1) + " ha lanzado un ordago!");
 
         mandarMano((jugador + 1) % 4);
@@ -974,7 +970,7 @@ public class GameRoom implements Runnable {
         }
     }
 
-    private static boolean resolverOrdagoPares(int jugador, int apuestaActual) {
+    private boolean resolverOrdagoPares(int jugador, int apuestaActual) {
         mandarATodos("Jugador " + (jugador + 1) + " ha lanzado un ordago!");
         String respuesta;
 
@@ -1025,7 +1021,7 @@ public class GameRoom implements Runnable {
         }
     }
 
-    private static boolean resolverOrdagoJuego(int jugador, int apuestaActual) {
+    private boolean resolverOrdagoJuego(int jugador, int apuestaActual) {
         mandarATodos("Jugador " + (jugador + 1) + " ha lanzado un ordago!");
         String respuesta;
 
@@ -1074,7 +1070,7 @@ public class GameRoom implements Runnable {
         }
     }
 
-    private static boolean resolverOrdagoPunto(int jugador, int apuestaActual) {
+    private boolean resolverOrdagoPunto(int jugador, int apuestaActual) {
         mandarATodos("Jugador " + (jugador + 1) + " ha lanzado un ordago!");
 
         mandarMano((jugador + 1) % 4);
@@ -1102,7 +1098,7 @@ public class GameRoom implements Runnable {
         }
     }
 
-    private static int getGanadorGrande() {
+    private int getGanadorGrande() {
         for (int i = 0; i < 4; i++) {
             int manoGanadora = -1;
             int valorMayor = -1;
@@ -1129,7 +1125,7 @@ public class GameRoom implements Runnable {
         return jugadorMano;
     }
 
-    private static int getGanadorPequena() {
+    private int getGanadorPequena() {
         for (int i = 3; i >= 0; i--) {
             int manoGanadora = -1;
             int valorMenor = 11;
@@ -1156,7 +1152,7 @@ public class GameRoom implements Runnable {
         return jugadorMano;
     }
 
-    private static int[] getGanadorPares() {
+    private int[] getGanadorPares() {
         int jugadorGanador = -1;
         int mejorTipoPares = -1;
 
@@ -1181,7 +1177,7 @@ public class GameRoom implements Runnable {
         return new int[] { jugadorGanador, mejorTipoPares };
     }
 
-    private static int getGanadorPunto() {
+    private int getGanadorPunto() {
         int manoGanadora = -1;
         int valorMayor = -1;
         jugadorActual = jugadorMano;
@@ -1198,7 +1194,7 @@ public class GameRoom implements Runnable {
         return manoGanadora;
     }
 
-    private static int[] getGanadorJuego() {
+    private int[] getGanadorJuego() {
         int jugadorGanador = -1;
         int mejorvalorJuego = -1;
         int mejorJuego = -1;
@@ -1229,7 +1225,7 @@ public class GameRoom implements Runnable {
 
     // Método para clasificar el tipo de pares en la mano: 3 = duples, 2 = medias, 1
     // = pares
-    private static int evaluarTipoPares(List<Card> mano) {
+    private int evaluarTipoPares(List<Card> mano) {
         Map<Integer, Integer> contadorValores = new HashMap<>();
         for (Card carta : mano) {
             int valor = carta.getValorNumerico();
@@ -1249,7 +1245,7 @@ public class GameRoom implements Runnable {
     }
 
     // Método para comparar las manos de jugadores con el mismo tipo de pares
-    private static int compararValoresPares(int jugador1, int jugador2, int tipoPares) {
+    private int compararValoresPares(int jugador1, int jugador2, int tipoPares) {
         List<Card> mano1 = conPares.get(jugador1);
         List<Card> mano2 = conPares.get(jugador2);
 
@@ -1284,7 +1280,7 @@ public class GameRoom implements Runnable {
         }
     }
 
-    private static int getPosicionPareja(List<Card> mano) {
+    private int getPosicionPareja(List<Card> mano) {
         for (int i = 0; i < mano.size() - 1; i++) {
             int valor1 = mano.get(i).getValorNumerico();
             int valor2 = mano.get(i + 1).getValorNumerico();
@@ -1295,7 +1291,7 @@ public class GameRoom implements Runnable {
         return 0;
     }
 
-    private static int getPuntosMano(List<Card> mano) {
+    private int getPuntosMano(List<Card> mano) {
         int totalValue = 0;
         for (Card card : mano) {
             totalValue += card.getPuntos();
@@ -1303,7 +1299,7 @@ public class GameRoom implements Runnable {
         return totalValue;
     }
 
-    private static int getValorJuego(List<Card> mano) {
+    private int getValorJuego(List<Card> mano) {
         Map<Integer, Integer> valorMap = new HashMap<>();
         valorMap.put(33, 1);
         valorMap.put(34, 3);
@@ -1319,7 +1315,7 @@ public class GameRoom implements Runnable {
         return valorMap.getOrDefault(getPuntosMano(mano), 0);
     }
 
-    private static void sumarPaso() {
+    private void sumarPaso() {
         if (grandeAlPaso) {
             mandarATodos("Jugador " + (getGanadorGrande() + 1) + " ha ganado grande al paso\r\n");
             puntos[getGanadorGrande() % 2]++;
@@ -1342,13 +1338,13 @@ public class GameRoom implements Runnable {
         }
     }
 
-    private static void mandarATodos(String mensaje) {
+    private void mandarATodos(String mensaje) {
         for (int i = 0; i < 4; i++) {
             players.get(i).mandarMensaje(mensaje + "\r\n");
         }
     }
 
-    private static void mostrarPuntos() {
+    private void mostrarPuntos() {
         String mensaje = "Pareja 1: " + puntos[0] + " puntos \r\n";
         mensaje += "Pareja 2: " + puntos[1] + " puntos \r\n";
         mandarATodos(mensaje);
