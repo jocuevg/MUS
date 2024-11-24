@@ -12,8 +12,8 @@ import java.util.concurrent.FutureTask;
 public class GameRoom implements Runnable {
     private List<Player> players;
     private List<Card> mazo = new ArrayList<>();;
-    private int[] puntos =new int[2];
-    private int ronda=0;
+    private int[] puntos = new int[2];
+    private int ronda = 0;
     private List<List<Card>> manosJugadores = new ArrayList<>();
     private Map<Integer, List<Card>> conPares = new HashMap<>();
     private Map<Integer, List<Card>> conJuego = new HashMap<>();
@@ -545,33 +545,17 @@ public class GameRoom implements Runnable {
         new Thread(respuestaJugador1).start();
         new Thread(respuestaJugador2).start();
 
-        final boolean[] decisionTomada = {false};
-        final boolean[] ambosPasaron = {true};
-        final int[] respuestasProcesadas ={0}; 
+        final boolean[] decisionTomada = { false };
+        final boolean[] ambosPasaron = { true };
+        final int[] respuestasProcesadas = { 0 };
 
         new Thread(() -> {
             try {
                 String respuesta1 = respuestaJugador1.get(); // Obtiene la respuesta del jugador 1 cuando esté lista
                 synchronized (decisionTomada) {
                     if (!decisionTomada[0]) {
-                        if (procesarRespuestaGrande(respuesta1, (jugador + 1) % 4, apuestaActual, apuestaLanzada, mensaje1)) {
-                            decisionTomada[0] = true; // Decisión significativa
-                            ambosPasaron[0] = false; // No todos pasaron
-                        }
-                        respuestasProcesadas[0]++;
-                    }
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }).start();
-    
-        new Thread(() -> {
-            try {
-                String respuesta2 = respuestaJugador2.get(); // Obtiene la respuesta del jugador 2 cuando esté lista
-                synchronized (decisionTomada) {
-                    if (!decisionTomada[0]) {
-                        if (procesarRespuestaGrande(respuesta2, (jugador + 3) % 4, apuestaActual, apuestaLanzada, mensaje1)) {
+                        if (procesarRespuestaGrande(respuesta1, (jugador + 1) % 4, apuestaActual, apuestaLanzada,
+                                mensaje1)) {
                             decisionTomada[0] = true; // Decisión significativa
                             ambosPasaron[0] = false; // No todos pasaron
                         }
@@ -583,23 +567,44 @@ public class GameRoom implements Runnable {
             }
         }).start();
 
-        while (!decisionTomada[0] && respuestasProcesadas[0] < 2) {try {
-            Thread.sleep(50); // Pequeña espera para no consumir CPU - IMPORTANTE
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-            break;
-        }}
+        new Thread(() -> {
+            try {
+                String respuesta2 = respuestaJugador2.get(); // Obtiene la respuesta del jugador 2 cuando esté lista
+                synchronized (decisionTomada) {
+                    if (!decisionTomada[0]) {
+                        if (procesarRespuestaGrande(respuesta2, (jugador + 3) % 4, apuestaActual, apuestaLanzada,
+                                mensaje1)) {
+                            decisionTomada[0] = true; // Decisión significativa
+                            ambosPasaron[0] = false; // No todos pasaron
+                        }
+                        respuestasProcesadas[0]++;
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }).start();
+
+        while (!decisionTomada[0] && respuestasProcesadas[0] < 2) {
+            try {
+                Thread.sleep(50); // Pequeña espera para no consumir CPU - IMPORTANTE
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+                break;
+            }
+        }
 
         if (ambosPasaron[0]) {
             mandarATodos("El envite fue rechazado.");
             mandarATodos("Pareja " + ((jugador % 2) + 1) + " ha ganado la grande");
             puntos[jugador % 2] += apuestaActual;
         }
-    
+
         return false;
     }
 
-    private boolean procesarRespuestaGrande(String respuesta, int jugadorRespondio, int apuestaActual, int apuestaLanzada, String mensaje1) {
+    private boolean procesarRespuestaGrande(String respuesta, int jugadorRespondio, int apuestaActual,
+            int apuestaLanzada, String mensaje1) {
         if (respuesta.equalsIgnoreCase("quiero")) {
             mandarATodos("Jugador " + (jugadorRespondio + 1) + " ha aceptado el envido.");
             mandarATodos("Jugador " + (getGanadorGrande() + 1) + " ha ganado la grande");
@@ -608,7 +613,8 @@ public class GameRoom implements Runnable {
         } else if (respuesta.startsWith("envido ")) {
             try {
                 int nuevaApuesta = apuestaLanzada + Integer.parseInt(respuesta.split(" ")[1]);
-                mandarATodos("Jugador " + (jugadorRespondio + 1) + " ha aumentado el envido a " + nuevaApuesta + " puntos.");
+                mandarATodos(
+                        "Jugador " + (jugadorRespondio + 1) + " ha aumentado el envido a " + nuevaApuesta + " puntos.");
                 apuestaActual = apuestaLanzada;
                 apuestaLanzada = nuevaApuesta;
                 gestionarRespuestaEnvidoGrande(jugadorRespondio, apuestaActual, apuestaLanzada, mensaje1);
@@ -617,7 +623,7 @@ public class GameRoom implements Runnable {
                 mandarATodos("Jugador " + (jugadorRespondio + 1) + " ha aceptado el envido.");
                 mandarATodos("Jugador " + (getGanadorGrande() + 1) + " ha ganado la grande");
                 puntos[getGanadorGrande() % 2] += apuestaLanzada;
-                return true; // Decisión significativa tomada  
+                return true; // Decisión significativa tomada
             }
         } else if (respuesta.equalsIgnoreCase("ordago")) {
             resolverOrdagoGrande(jugadorRespondio, apuestaLanzada);
@@ -633,149 +639,187 @@ public class GameRoom implements Runnable {
         mandarATodos("Jugador " + (jugador % 4 + 1) + " ha envidado " + apuestaLanzada + " puntos.");
 
         mandarMano((jugador + 1) % 4);
-        players.get((jugador + 1) % 4).mandarMensaje(mensaje1);
-        String respuesta = players.get((jugador + 1) % 4).leerMensaje();
+        mandarMano((jugador + 3) % 4);
+
+        FutureTask<String> respuestaJugador1 = new FutureTask<>(() -> {
+            players.get((jugador + 1) % 4).mandarMensaje(mensaje1);
+            return players.get((jugador + 1) % 4).leerMensaje();
+        });
+
+        FutureTask<String> respuestaJugador2 = new FutureTask<>(() -> {
+            players.get((jugador + 3) % 4).mandarMensaje(mensaje1);
+            return players.get((jugador + 3) % 4).leerMensaje();
+        });
+
+        new Thread(respuestaJugador1).start();
+        new Thread(respuestaJugador2).start();
+
+        final boolean[] decisionTomada = { false };
+        final boolean[] ambosPasaron = { true };
+        final int[] respuestasProcesadas = { 0 };
+
+        new Thread(() -> {
+            try {
+                String respuesta1 = respuestaJugador1.get(); // Obtiene la respuesta del jugador 1 cuando esté lista
+                synchronized (decisionTomada) {
+                    if (!decisionTomada[0]) {
+                        if (procesarRespuestaPequena(respuesta1, (jugador + 1) % 4, apuestaActual, apuestaLanzada,
+                                mensaje1)) {
+                            decisionTomada[0] = true; // Decisión significativa
+                            ambosPasaron[0] = false; // No todos pasaron
+                        }
+                        respuestasProcesadas[0]++;
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }).start();
+
+        new Thread(() -> {
+            try {
+                String respuesta2 = respuestaJugador2.get(); // Obtiene la respuesta del jugador 2 cuando esté lista
+                synchronized (decisionTomada) {
+                    if (!decisionTomada[0]) {
+                        if (procesarRespuestaPequena(respuesta2, (jugador + 3) % 4, apuestaActual, apuestaLanzada,
+                                mensaje1)) {
+                            decisionTomada[0] = true; // Decisión significativa
+                            ambosPasaron[0] = false; // No todos pasaron
+                        }
+                        respuestasProcesadas[0]++;
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }).start();
+
+        while (!decisionTomada[0] && respuestasProcesadas[0] < 2) {
+            try {
+                Thread.sleep(50); // Pequeña espera para no consumir CPU - IMPORTANTE
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+                break;
+            }
+        }
+
+        if (ambosPasaron[0]) {
+            mandarATodos("El envite fue rechazado.");
+            mandarATodos("Pareja " + ((jugador % 2) + 1) + " ha ganado la pequena");
+            puntos[jugador % 2] += apuestaActual;
+        }
+
+        return false;
+    }
+
+    private boolean procesarRespuestaPequena(String respuesta, int jugadorRespondio, int apuestaActual,
+            int apuestaLanzada, String mensaje1) {
         if (respuesta.equalsIgnoreCase("quiero")) {
-            mandarATodos("Jugador " + ((jugador + 1) % 4 + 1) + " ha aceptado el envido.");
+            mandarATodos("Jugador " + (jugadorRespondio + 1) + " ha aceptado el envido.");
             mandarATodos("Jugador " + (getGanadorPequena() + 1) + " ha ganado la pequena");
-            puntos[getGanadorPequena() % 2] += apuestaLanzada; // Se suman los puntos al equipo contrario
-            return false; // Termina el envido
+            puntos[getGanadorPequena() % 2] += apuestaLanzada;
+            return true; // Decisión significativa tomada
         } else if (respuesta.startsWith("envido ")) {
             try {
                 int nuevaApuesta = apuestaLanzada + Integer.parseInt(respuesta.split(" ")[1]);
-                mandarATodos("Jugador " + ((jugador + 1) % 4 + 1) + " ha aumentado el envido a " + nuevaApuesta
-                        + " puntos.");
+                mandarATodos(
+                        "Jugador " + (jugadorRespondio + 1) + " ha aumentado el envido a " + nuevaApuesta + " puntos.");
                 apuestaActual = apuestaLanzada;
                 apuestaLanzada = nuevaApuesta;
-                gestionarRespuestaEnvidoPequena((jugador + 1) % 4, apuestaActual, apuestaLanzada, mensaje1);
-                return false; // Continúa el envido con la nueva apuesta
+                gestionarRespuestaEnvidoPequena(jugadorRespondio, apuestaActual, apuestaLanzada, mensaje1);
+                return true; // Decisión significativa tomada
             } catch (NumberFormatException e) {
-                mandarATodos("Jugador " + ((jugador + 1) % 4 + 1) + " ha aceptado el envido.");
+                mandarATodos("Jugador " + (jugadorRespondio + 1) + " ha aceptado el envido.");
                 mandarATodos("Jugador " + (getGanadorPequena() + 1) + " ha ganado la pequena");
-                puntos[getGanadorPequena() % 2] += apuestaLanzada; // Se suman los puntos al equipo contrario
-                return false; // Termina el envido
+                puntos[getGanadorPequena() % 2] += apuestaLanzada;
+                return true; // Decisión significativa tomada
             }
         } else if (respuesta.equalsIgnoreCase("ordago")) {
-            return resolverOrdagoPequena((jugador + 1) % 4, apuestaLanzada);
+            resolverOrdagoPequena(jugadorRespondio, apuestaLanzada);
+            return true; // Decisión significativa tomada
         } else {
-            mandarATodos("Jugador " + ((jugador + 1) % 4 + 1) + " ha rechazado el envido.");
-
-            mandarMano((jugador + 3) % 4);
-            players.get((jugador + 3) % 4).mandarMensaje(mensaje1);
-            respuesta = players.get((jugador + 3) % 4).leerMensaje();
-
-            if (respuesta.equalsIgnoreCase("quiero")) {
-                mandarATodos("Jugador " + ((jugador + 3) % 4 + 1) + " ha aceptado el envido.");
-                mandarATodos("Jugador " + (getGanadorPequena() + 1) + " ha ganado la pequena");
-                puntos[getGanadorPequena() % 2] += apuestaLanzada; // Se suman los puntos al equipo contrario
-                return false; // Termina el envido
-            } else if (respuesta.startsWith("envido ")) {
-                try {
-                    int nuevaApuesta = apuestaLanzada + Integer.parseInt(respuesta.split(" ")[1]);
-                    mandarATodos("Jugador " + ((jugador + 3) % 4 + 1) + " ha aumentado el envido a " + nuevaApuesta
-                            + " puntos.");
-                    apuestaActual = apuestaLanzada;
-                    apuestaLanzada = nuevaApuesta;
-                    gestionarRespuestaEnvidoPequena((jugador + 3) % 4, apuestaActual, apuestaLanzada, mensaje1);
-                    return false; // Continúa el envido con la nueva apuesta
-                } catch (NumberFormatException e) {
-                    mandarATodos("Jugador " + ((jugador + 3) % 4 + 1) + " ha aceptado el envido.");
-                    mandarATodos("Jugador " + (getGanadorPequena() + 1) + " ha ganado la pequena");
-                    puntos[getGanadorPequena() % 2] += apuestaLanzada; // Se suman los puntos al equipo contrario
-                    return false; // Termina el envido
-                }
-            } else if (respuesta.equalsIgnoreCase("ordago")) {
-                return resolverOrdagoPequena((jugador + 3) % 4, apuestaLanzada);
-            } else {
-                mandarATodos("El envite fue rechazado.");
-                mandarATodos("Pareja " + ((jugador % 2) + 1) + " ha ganado la pequena");
-                puntos[jugador % 2] += apuestaActual;
-                return false;
-            }
+            mandarATodos("Jugador " + (jugadorRespondio + 1) + " ha rechazado el envido.");
         }
+        return false; // No se tomó una decisión significativa
     }
 
     private boolean gestionarRespuestaEnvidoPares(int jugador, int apuestaActual, int apuestaLanzada,
             String mensaje1) {
         mandarATodos("Jugador " + (jugador % 4 + 1) + " ha envidado " + apuestaLanzada + " puntos.");
-        String respuesta;
+
+        final boolean[] decisionTomada = { false };
+        final boolean[] ambosPasaron = { true };
+        final int[] respuestasProcesadas = { 0 };
 
         if (conPares.containsKey((jugador + 1) % 4)) {
             mandarMano((jugador + 1) % 4);
-            players.get((jugador + 1) % 4).mandarMensaje(mensaje1);
-            respuesta = players.get((jugador + 1) % 4).leerMensaje();
-            if (respuesta.equalsIgnoreCase("quiero")) {
-                mandarATodos("Jugador " + ((jugador + 1) % 4 + 1) + " ha aceptado el envido.");
-                mandarATodos("Jugador " + (getGanadorPares()[0] + 1) + " ha ganado pares");
-                puntos[getGanadorPares()[0] % 2] += apuestaLanzada + getGanadorPares()[1]; // Se suman los puntos al
-                                                                                           // equipo contrario
-                return false; // Termina el envido
-            } else if (respuesta.startsWith("envido ")) {
+
+            FutureTask<String> respuestaJugador1 = new FutureTask<>(() -> {
+                players.get((jugador + 1) % 4).mandarMensaje(mensaje1);
+                return players.get((jugador + 1) % 4).leerMensaje();
+            });
+            new Thread(respuestaJugador1).start();
+
+            new Thread(() -> {
                 try {
-                    int nuevaApuesta = apuestaLanzada + Integer.parseInt(respuesta.split(" ")[1]);
-                    mandarATodos("Jugador " + ((jugador + 1) % 4 + 1) + " ha aumentado el envido a " + nuevaApuesta
-                            + " puntos.");
-                    apuestaActual = apuestaLanzada;
-                    apuestaLanzada = nuevaApuesta;
-                    gestionarRespuestaEnvidoPares((jugador + 1) % 4, apuestaActual, apuestaLanzada, mensaje1);
-                    return false; // Continúa el envido con la nueva apuesta
-                } catch (NumberFormatException e) {
-                    mandarATodos("Jugador " + ((jugador + 1) % 4 + 1) + " ha aceptado el envido.");
-                    mandarATodos("Jugador " + (getGanadorPares()[0] + 1) + " ha ganado pares");
-                    puntos[getGanadorPares()[0] % 2] += apuestaLanzada + getGanadorPares()[1]; // Se suman los puntos al
-                                                                                               // equipo contrario
-                    return false; // Termina el envido
+                    String respuesta1 = respuestaJugador1.get(); // Obtiene la respuesta del jugador 1 cuando esté lista
+                    synchronized (decisionTomada) {
+                        if (!decisionTomada[0]) {
+                            if (procesarRespuestaPares(respuesta1, (jugador + 1) % 4, apuestaActual, apuestaLanzada,
+                                    mensaje1)) {
+                                decisionTomada[0] = true; // Decisión significativa
+                                ambosPasaron[0] = false; // No todos pasaron
+                            }
+                            respuestasProcesadas[0]++;
+                        }
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
-            } else if (respuesta.equalsIgnoreCase("ordago")) {
-                return resolverOrdagoPares((jugador + 1) % 4, apuestaLanzada);
-            } else {
-                mandarATodos("Jugador " + ((jugador + 1) % 4 + 1) + " ha rechazado el envido.");
-            }
-        }
+            }).start();
+        } else
+            respuestasProcesadas[0]++;
         if (conPares.containsKey((jugador + 3) % 4)) {
             mandarMano((jugador + 3) % 4);
-            players.get((jugador + 3) % 4).mandarMensaje(mensaje1);
-            respuesta = players.get((jugador + 3) % 4).leerMensaje();
 
-            if (respuesta.equalsIgnoreCase("quiero")) {
-                mandarATodos("Jugador " + ((jugador + 3) % 4 + 1) + " ha aceptado el envido.");
-                mandarATodos("Jugador " + (getGanadorPares()[0] + 1) + " ha ganado pares");
-                puntos[getGanadorPares()[0] % 2] += apuestaLanzada + getGanadorPares()[1]; // Se suman los puntos al
-                                                                                           // equipo contrario
-                return false; // Termina el envido
-            } else if (respuesta.startsWith("envido ")) {
+            FutureTask<String> respuestaJugador2 = new FutureTask<>(() -> {
+                players.get((jugador + 3) % 4).mandarMensaje(mensaje1);
+                return players.get((jugador + 3) % 4).leerMensaje();
+            });
+            new Thread(respuestaJugador2).start();
+
+            new Thread(() -> {
                 try {
-                    int nuevaApuesta = apuestaLanzada + Integer.parseInt(respuesta.split(" ")[1]);
-                    mandarATodos("Jugador " + ((jugador + 3) % 4 + 1) + " ha aumentado el envido a " + nuevaApuesta
-                            + " puntos.");
-                    apuestaActual = apuestaLanzada;
-                    apuestaLanzada = nuevaApuesta;
-                    gestionarRespuestaEnvidoPares((jugador + 3) % 4, apuestaActual, apuestaLanzada, mensaje1);
-                    return false; // Continúa el envido con la nueva apuesta
-                } catch (NumberFormatException e) {
-                    mandarATodos("Jugador " + ((jugador + 3) % 4 + 1) + " ha aceptado el envido.");
-                    mandarATodos("Jugador " + (getGanadorPares()[0] + 1) + " ha ganado pares");
-                    puntos[getGanadorPares()[0] % 2] += apuestaLanzada + getGanadorPares()[1]; // Se suman los puntos al
-                                                                                               // equipo contrario
-                    return false; // Termina el envido
+                    String respuesta2 = respuestaJugador2.get(); // Obtiene la respuesta del jugador 2 cuando esté lista
+                    synchronized (decisionTomada) {
+                        if (!decisionTomada[0]) {
+                            if (procesarRespuestaPares(respuesta2, (jugador + 3) % 4, apuestaActual, apuestaLanzada,
+                                    mensaje1)) {
+                                decisionTomada[0] = true; // Decisión significativa
+                                ambosPasaron[0] = false; // No todos pasaron
+                            }
+                            respuestasProcesadas[0]++;
+                        }
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
-            } else if (respuesta.equalsIgnoreCase("ordago")) {
-                return resolverOrdagoPares((jugador + 3) % 4, apuestaLanzada);
-            } else {
-                mandarATodos("Jugador " + ((jugador + 3) % 4 + 1) + " ha rechazado el envido.");
-                mandarATodos("El envite fue rechazado.");
-                int compaJugador = (jugador + 2) % 4;
-                if (conPares.get(compaJugador) == null) {
-                    puntos[jugador % 2] += apuestaActual + evaluarTipoPares(manosJugadores.get(jugador));
-                } else {
-                    puntos[jugador % 2] += apuestaActual + evaluarTipoPares(manosJugadores.get(jugador))
-                            + evaluarTipoPares(manosJugadores.get(compaJugador));
-                }
-                mandarATodos("Pareja " + ((jugador % 2) + 1) + " ha ganado pares");
-                return false;
+            }).start();
+        } else
+            respuestasProcesadas[0]++;
+
+        while (!decisionTomada[0] && respuestasProcesadas[0] < 2) {
+            try {
+                Thread.sleep(50); // Pequeña espera para no consumir CPU - IMPORTANTE
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+                break;
             }
-        } else {
+        }
+
+        if (ambosPasaron[0]) {
             mandarATodos("El envite fue rechazado.");
+            mandarATodos("Pareja " + ((jugador % 2) + 1) + " ha ganado pares");
             int compaJugador = (jugador + 2) % 4;
             if (conPares.get(compaJugador) == null) {
                 puntos[jugador % 2] += apuestaActual + evaluarTipoPares(manosJugadores.get(jugador));
@@ -783,90 +827,118 @@ public class GameRoom implements Runnable {
                 puntos[jugador % 2] += apuestaActual + evaluarTipoPares(manosJugadores.get(jugador))
                         + evaluarTipoPares(manosJugadores.get(compaJugador));
             }
-            mandarATodos("Jugador " + ((jugador % 2) + 1) + " ha ganado pares");
-            return false;
         }
+        return false;
+    }
+
+    private boolean procesarRespuestaPares(String respuesta, int jugadorRespondio, int apuestaActual,
+            int apuestaLanzada, String mensaje1) {
+        if (respuesta.equalsIgnoreCase("quiero")) {
+            mandarATodos("Jugador " + (jugadorRespondio + 1) + " ha aceptado el envido.");
+            mandarATodos("Jugador " + (getGanadorPares()[0] + 1) + " ha ganado pares");
+            puntos[getGanadorPares()[0] % 2] += apuestaLanzada + getGanadorPares()[1]; // Se suman los puntos al
+                                                                                       // equipo contrario
+            return true; // Termina el envido
+        } else if (respuesta.startsWith("envido ")) {
+            try {
+                int nuevaApuesta = apuestaLanzada + Integer.parseInt(respuesta.split(" ")[1]);
+                mandarATodos(
+                        "Jugador " + (jugadorRespondio + 1) + " ha aumentado el envido a " + nuevaApuesta + " puntos.");
+                apuestaActual = apuestaLanzada;
+                apuestaLanzada = nuevaApuesta;
+                gestionarRespuestaEnvidoPares(jugadorRespondio, apuestaActual, apuestaLanzada, mensaje1);
+                return true; // Decisión significativa tomada
+            } catch (NumberFormatException e) {
+                mandarATodos("Jugador " + (jugadorRespondio + 1) + " ha aceptado el envido.");
+                mandarATodos("Jugador " + (getGanadorPares()[0] + 1) + " ha ganado pares");
+                puntos[getGanadorPares()[0] % 2] += apuestaLanzada + getGanadorPares()[1]; // Se suman los puntos al
+                                                                                           // equipo contrario
+                return true; // Termina el envido
+            }
+        } else if (respuesta.equalsIgnoreCase("ordago")) {
+            resolverOrdagoPares(jugadorRespondio, apuestaLanzada);
+            return true; // Decisión significativa tomada
+        } else {
+            mandarATodos("Jugador " + (jugadorRespondio + 1) + " ha rechazado el envido.");
+        }
+        return false; // No se tomó una decisión significativa
     }
 
     private boolean gestionarRespuestaEnvidoJuego(int jugador, int apuestaActual, int apuestaLanzada,
             String mensaje1) {
         mandarATodos("Jugador " + (jugador % 4 + 1) + " ha envidado " + apuestaLanzada + " puntos.");
-        String respuesta;
+
+        final boolean[] decisionTomada = { false };
+        final boolean[] ambosPasaron = { true };
+        final int[] respuestasProcesadas = { 0 };
 
         if (conJuego.containsKey((jugador + 1) % 4)) {
             mandarMano((jugador + 1) % 4);
-            players.get((jugador + 1) % 4).mandarMensaje(mensaje1);
-            respuesta = players.get((jugador + 1) % 4).leerMensaje();
-            if (respuesta.equalsIgnoreCase("quiero")) {
-                mandarATodos("Jugador " + ((jugador + 1) % 4 + 1) + " ha aceptado el envido.");
-                mandarATodos("Jugador " + (getGanadorJuego()[0] + 1) + " ha ganado el juego");
-                puntos[getGanadorJuego()[0] % 2] += apuestaLanzada + getGanadorJuego()[1]; // Se suman los puntos al
-                                                                                           // equipo contrario
-                return false; // Termina el envido
-            } else if (respuesta.startsWith("envido ")) {
+
+            FutureTask<String> respuestaJugador1 = new FutureTask<>(() -> {
+                players.get((jugador + 1) % 4).mandarMensaje(mensaje1);
+                return players.get((jugador + 1) % 4).leerMensaje();
+            });
+            new Thread(respuestaJugador1).start();
+
+            new Thread(() -> {
                 try {
-                    int nuevaApuesta = apuestaLanzada + Integer.parseInt(respuesta.split(" ")[1]);
-                    mandarATodos("Jugador " + ((jugador + 1) % 4 + 1) + " ha aumentado el envido a " + nuevaApuesta
-                            + " puntos.");
-                    apuestaActual = apuestaLanzada;
-                    apuestaLanzada = nuevaApuesta;
-                    gestionarRespuestaEnvidoJuego((jugador + 1) % 4, apuestaActual, apuestaLanzada, mensaje1);
-                    return false; // Continúa el envido con la nueva apuesta
-                } catch (NumberFormatException e) {
-                    mandarATodos("Jugador " + ((jugador + 1) % 4 + 1) + " ha aceptado el envido.");
-                    mandarATodos("Jugador " + (getGanadorJuego()[0] + 1) + " ha ganado el juego");
-                    puntos[getGanadorJuego()[0] % 2] += apuestaLanzada + getGanadorJuego()[1]; // Se suman los puntos al
-                                                                                               // equipo contrario
-                    return false; // Termina el envido
+                    String respuesta1 = respuestaJugador1.get(); // Obtiene la respuesta del jugador 1 cuando esté lista
+                    synchronized (decisionTomada) {
+                        if (!decisionTomada[0]) {
+                            if (procesarRespuestaJuego(respuesta1, (jugador + 1) % 4, apuestaActual, apuestaLanzada,
+                                    mensaje1)) {
+                                decisionTomada[0] = true; // Decisión significativa
+                                ambosPasaron[0] = false; // No todos pasaron
+                            }
+                            respuestasProcesadas[0]++;
+                        }
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
-            } else if (respuesta.equalsIgnoreCase("ordago")) {
-                return resolverOrdagoJuego((jugador + 1) % 4, apuestaLanzada);
-            } else {
-                mandarATodos("Jugador " + ((jugador + 1) % 4 + 1) + " ha rechazado el envido.");
-            }
-        }
+            }).start();
+        } else
+            respuestasProcesadas[0]++;
         if (conJuego.containsKey((jugador + 3) % 4)) {
             mandarMano((jugador + 3) % 4);
-            players.get((jugador + 3) % 4).mandarMensaje(mensaje1);
-            respuesta = players.get((jugador + 3) % 4).leerMensaje();
 
-            if (respuesta.equalsIgnoreCase("quiero")) {
-                mandarATodos("Jugador " + ((jugador + 3) % 4 + 1) + " ha aceptado el envido.");
-                mandarATodos("Jugador " + (getGanadorJuego()[0] + 1) + " ha ganado el juego");
-                puntos[getGanadorJuego()[0] % 2] += apuestaLanzada + getGanadorJuego()[1]; // Se suman los puntos al
-                                                                                           // equipo contrario
-                return false; // Termina el envido
-            } else if (respuesta.startsWith("envido ")) {
+            FutureTask<String> respuestaJugador2 = new FutureTask<>(() -> {
+                players.get((jugador + 3) % 4).mandarMensaje(mensaje1);
+                return players.get((jugador + 3) % 4).leerMensaje();
+            });
+            new Thread(respuestaJugador2).start();
+
+            new Thread(() -> {
                 try {
-                    int nuevaApuesta = apuestaLanzada + Integer.parseInt(respuesta.split(" ")[1]);
-                    mandarATodos("Jugador " + ((jugador + 3) % 4 + 1) + " ha aumentado el envido a " + nuevaApuesta
-                            + " puntos.");
-                    apuestaActual = apuestaLanzada;
-                    apuestaLanzada = nuevaApuesta;
-                    gestionarRespuestaEnvidoJuego((jugador + 3) % 4, apuestaActual, apuestaLanzada, mensaje1);
-                    return false; // Continúa el envido con la nueva apuesta
-                } catch (NumberFormatException e) {
-                    mandarATodos("Jugador " + ((jugador + 3) % 4 + 1) + " ha aceptado el envido.");
-                    mandarATodos("Jugador " + (getGanadorJuego()[0] + 1) + " ha ganado el juego");
-                    puntos[getGanadorJuego()[0] % 2] += apuestaLanzada + getGanadorJuego()[1]; // Se suman los puntos al
-                                                                                               // equipo contrario
-                    return false; // Termina el envido
+                    String respuesta2 = respuestaJugador2.get(); // Obtiene la respuesta del jugador 2 cuando esté lista
+                    synchronized (decisionTomada) {
+                        if (!decisionTomada[0]) {
+                            if (procesarRespuestaJuego(respuesta2, (jugador + 3) % 4, apuestaActual, apuestaLanzada,
+                                    mensaje1)) {
+                                decisionTomada[0] = true; // Decisión significativa
+                                ambosPasaron[0] = false; // No todos pasaron
+                            }
+                            respuestasProcesadas[0]++;
+                        }
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
-            } else if (respuesta.equalsIgnoreCase("ordago")) {
-                return resolverOrdagoJuego((jugador + 3) % 4, apuestaLanzada);
-            } else {
-                mandarATodos("Jugador " + ((jugador + 3) % 4 + 1) + " ha rechazado el envido.");
-                mandarATodos("El envite fue rechazado.");
-                int compaJugador = (jugador + 2) % 4;
-                int cantidadGanada = getPuntosMano(conJuego.get(jugador)) == 31 ? 3 : 2;
-                if (conJuego.get(compaJugador) != null) {
-                    cantidadGanada += getPuntosMano(conJuego.get(compaJugador)) == 31 ? 3 : 2;
-                }
-                puntos[jugador % 2] += apuestaActual + cantidadGanada;
-                mandarATodos("Pareja " + ((jugador % 2) + 1) + " ha ganado el juego");
-                return false;
+            }).start();
+        } else
+            respuestasProcesadas[0]++;
+
+        while (!decisionTomada[0] && respuestasProcesadas[0] < 2) {
+            try {
+                Thread.sleep(50); // Pequeña espera para no consumir CPU - IMPORTANTE
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+                break;
             }
-        } else {
+        }
+
+        if (ambosPasaron[0]) {
             mandarATodos("El envite fue rechazado.");
             int compaJugador = (jugador + 2) % 4;
             int cantidadGanada = getPuntosMano(conJuego.get(jugador)) == 31 ? 3 : 2;
@@ -874,9 +946,42 @@ public class GameRoom implements Runnable {
                 cantidadGanada += getPuntosMano(conJuego.get(compaJugador)) == 31 ? 3 : 2;
             }
             puntos[jugador % 2] += apuestaActual + cantidadGanada;
-            mandarATodos("Pareja " + ((jugador % 2) + 1) + " ha ganado el juego");
-            return false;
+            mandarATodos("Pareja " + ((jugador % 2) + 1) + " ha ganado juego");
         }
+        return false;
+    }
+
+    private boolean procesarRespuestaJuego(String respuesta, int jugadorRespondio, int apuestaActual,
+            int apuestaLanzada, String mensaje1) {
+        if (respuesta.equalsIgnoreCase("quiero")) {
+            mandarATodos("Jugador " + (jugadorRespondio + 1) + " ha aceptado el envido.");
+            mandarATodos("Jugador " + (getGanadorJuego()[0] + 1) + " ha ganado juego");
+            puntos[getGanadorPares()[0] % 2] += apuestaLanzada + getGanadorPares()[1]; // Se suman los puntos al
+                                                                                       // equipo contrario
+            return true; // Termina el envido
+        } else if (respuesta.startsWith("envido ")) {
+            try {
+                int nuevaApuesta = apuestaLanzada + Integer.parseInt(respuesta.split(" ")[1]);
+                mandarATodos(
+                        "Jugador " + (jugadorRespondio + 1) + " ha aumentado el envido a " + nuevaApuesta + " puntos.");
+                apuestaActual = apuestaLanzada;
+                apuestaLanzada = nuevaApuesta;
+                gestionarRespuestaEnvidoJuego(jugadorRespondio, apuestaActual, apuestaLanzada, mensaje1);
+                return true; // Decisión significativa tomada
+            } catch (NumberFormatException e) {
+                mandarATodos("Jugador " + (jugadorRespondio + 1) + " ha aceptado el envido.");
+                mandarATodos("Jugador " + (getGanadorJuego()[0] + 1) + " ha ganado juego");
+                puntos[getGanadorPares()[0] % 2] += apuestaLanzada + getGanadorPares()[1]; // Se suman los puntos al
+                                                                                           // equipo contrario
+                return true; // Termina el envido
+            }
+        } else if (respuesta.equalsIgnoreCase("ordago")) {
+            resolverOrdagoJuego(jugadorRespondio, apuestaLanzada);
+            return true; // Decisión significativa tomada
+        } else {
+            mandarATodos("Jugador " + (jugadorRespondio + 1) + " ha rechazado el envido.");
+        }
+        return false; // No se tomó una decisión significativa
     }
 
     private boolean gestionarRespuestaEnvidoPunto(int jugador, int apuestaActual, int apuestaLanzada,
@@ -884,66 +989,108 @@ public class GameRoom implements Runnable {
         mandarATodos("Jugador " + (jugador % 4 + 1) + " ha envidado " + apuestaLanzada + " puntos.");
 
         mandarMano((jugador + 1) % 4);
-        players.get((jugador + 1) % 4).mandarMensaje(mensaje1);
-        String respuesta = players.get((jugador + 1) % 4).leerMensaje();
+        mandarMano((jugador + 3) % 4);
+
+        FutureTask<String> respuestaJugador1 = new FutureTask<>(() -> {
+            players.get((jugador + 1) % 4).mandarMensaje(mensaje1);
+            return players.get((jugador + 1) % 4).leerMensaje();
+        });
+
+        FutureTask<String> respuestaJugador2 = new FutureTask<>(() -> {
+            players.get((jugador + 3) % 4).mandarMensaje(mensaje1);
+            return players.get((jugador + 3) % 4).leerMensaje();
+        });
+
+        new Thread(respuestaJugador1).start();
+        new Thread(respuestaJugador2).start();
+
+        final boolean[] decisionTomada = { false };
+        final boolean[] ambosPasaron = { true };
+        final int[] respuestasProcesadas = { 0 };
+
+        new Thread(() -> {
+            try {
+                String respuesta1 = respuestaJugador1.get(); // Obtiene la respuesta del jugador 1 cuando esté lista
+                synchronized (decisionTomada) {
+                    if (!decisionTomada[0]) {
+                        if (procesarRespuestaPuntos(respuesta1, (jugador + 1) % 4, apuestaActual, apuestaLanzada,
+                                mensaje1)) {
+                            decisionTomada[0] = true; // Decisión significativa
+                            ambosPasaron[0] = false; // No todos pasaron
+                        }
+                        respuestasProcesadas[0]++;
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }).start();
+
+        new Thread(() -> {
+            try {
+                String respuesta2 = respuestaJugador2.get(); // Obtiene la respuesta del jugador 2 cuando esté lista
+                synchronized (decisionTomada) {
+                    if (!decisionTomada[0]) {
+                        if (procesarRespuestaPuntos(respuesta2, (jugador + 3) % 4, apuestaActual, apuestaLanzada,
+                                mensaje1)) {
+                            decisionTomada[0] = true; // Decisión significativa
+                            ambosPasaron[0] = false; // No todos pasaron
+                        }
+                        respuestasProcesadas[0]++;
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }).start();
+
+        while (!decisionTomada[0] && respuestasProcesadas[0] < 2) {
+            try {
+                Thread.sleep(50); // Pequeña espera para no consumir CPU - IMPORTANTE
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+                break;
+            }
+        }
+
+        if (ambosPasaron[0]) {
+            mandarATodos("El envite fue rechazado.");
+            mandarATodos("Pareja " + ((jugador % 2) + 1) + " ha ganado el punto");
+            puntos[jugador % 2] += apuestaActual;
+        }
+
+        return false;
+    }
+
+    private boolean procesarRespuestaPuntos(String respuesta, int jugadorRespondio, int apuestaActual,
+            int apuestaLanzada, String mensaje1) {
         if (respuesta.equalsIgnoreCase("quiero")) {
-            mandarATodos("Jugador " + ((jugador + 1) % 4 + 1) + " ha aceptado el envido.");
+            mandarATodos("Jugador " + (jugadorRespondio + 1) + " ha aceptado el envido.");
             mandarATodos("Jugador " + (getGanadorPunto() + 1) + " ha ganado el punto");
-            puntos[getGanadorPunto() % 2] += apuestaLanzada; // Se suman los puntos al equipo contrario
-            return false; // Termina el envido
+            puntos[getGanadorPunto() % 2] += apuestaLanzada;
+            return true; // Decisión significativa tomada
         } else if (respuesta.startsWith("envido ")) {
             try {
                 int nuevaApuesta = apuestaLanzada + Integer.parseInt(respuesta.split(" ")[1]);
-                mandarATodos("Jugador " + ((jugador + 1) % 4 + 1) + " ha aumentado el envido a " + nuevaApuesta
-                        + " puntos.");
+                mandarATodos(
+                        "Jugador " + (jugadorRespondio + 1) + " ha aumentado el envido a " + nuevaApuesta + " puntos.");
                 apuestaActual = apuestaLanzada;
                 apuestaLanzada = nuevaApuesta;
-                gestionarRespuestaEnvidoPunto((jugador + 1) % 4, apuestaActual, apuestaLanzada, mensaje1);
-                return false; // Continúa el envido con la nueva apuesta
+                gestionarRespuestaEnvidoPunto(jugadorRespondio, apuestaActual, apuestaLanzada, mensaje1);
+                return true; // Decisión significativa tomada
             } catch (NumberFormatException e) {
-                mandarATodos("Jugador " + ((jugador + 1) % 4 + 1) + " ha aceptado el envido.");
+                mandarATodos("Jugador " + (jugadorRespondio + 1) + " ha aceptado el envido.");
                 mandarATodos("Jugador " + (getGanadorPunto() + 1) + " ha ganado el punto");
-                puntos[getGanadorPunto() % 2] += apuestaLanzada; // Se suman los puntos al equipo contrario
-                return false; // Termina el envido
+                puntos[getGanadorPunto() % 2] += apuestaLanzada;
+                return true; // Decisión significativa tomada
             }
         } else if (respuesta.equalsIgnoreCase("ordago")) {
-            return resolverOrdagoPunto((jugador + 1) % 4, apuestaLanzada);
+            resolverOrdagoPunto(jugadorRespondio, apuestaLanzada);
+            return true; // Decisión significativa tomada
         } else {
-            mandarATodos("Jugador " + ((jugador + 1) % 4 + 1) + " ha rechazado el envido.");
-
-            mandarMano((jugador + 3) % 4);
-            players.get((jugador + 3) % 4).mandarMensaje(mensaje1);
-            respuesta = players.get((jugador + 3) % 4).leerMensaje();
-
-            if (respuesta.equalsIgnoreCase("quiero")) {
-                mandarATodos("Jugador " + ((jugador + 3) % 4 + 1) + " ha aceptado el envido.");
-                mandarATodos("Jugador " + (getGanadorPunto() + 1) + " ha ganado el punto");
-                puntos[getGanadorPunto() % 2] += apuestaLanzada; // Se suman los puntos al equipo contrario
-                return false; // Termina el envido
-            } else if (respuesta.startsWith("envido ")) {
-                try {
-                    int nuevaApuesta = apuestaLanzada + Integer.parseInt(respuesta.split(" ")[1]);
-                    mandarATodos("Jugador " + ((jugador + 3) % 4 + 1) + " ha aumentado el envido a " + nuevaApuesta
-                            + " puntos.");
-                    apuestaActual = apuestaLanzada;
-                    apuestaLanzada = nuevaApuesta;
-                    gestionarRespuestaEnvidoPunto((jugador + 3) % 4, apuestaActual, apuestaLanzada, mensaje1);
-                    return false; // Continúa el envido con la nueva apuesta
-                } catch (NumberFormatException e) {
-                    mandarATodos("Jugador " + ((jugador + 3) % 4 + 1) + " ha aceptado el envido.");
-                    mandarATodos("Jugador " + (getGanadorPunto() + 1) + " ha ganado el punto");
-                    puntos[getGanadorPunto() % 2] += apuestaLanzada; // Se suman los puntos al equipo contrario
-                    return false; // Termina el envido
-                }
-            } else if (respuesta.equalsIgnoreCase("ordago")) {
-                return resolverOrdagoPunto((jugador + 3) % 4, apuestaLanzada);
-            } else {
-                mandarATodos("El envite fue rechazado.");
-                mandarATodos("Pareja " + ((jugador % 2) + 1) + " ha ganado el punto");
-                puntos[jugador % 2] += apuestaActual;
-                return false;
-            }
+            mandarATodos("Jugador " + (jugadorRespondio + 1) + " ha rechazado el envido.");
         }
+        return false; // No se tomó una decisión significativa
     }
 
     private boolean todosPasaron(int jugadorActual) {
@@ -961,7 +1108,7 @@ public class GameRoom implements Runnable {
             players.get((jugador + 1) % 4).mandarMensaje("Quieres el ordago? (si/no)");
             return players.get((jugador + 1) % 4).leerMensaje();
         });
-    
+
         FutureTask<String> respuestaJugador2 = new FutureTask<>(() -> {
             players.get((jugador + 3) % 4).mandarMensaje("Quieres el ordago? (si/no)");
             return players.get((jugador + 3) % 4).leerMensaje();
@@ -970,9 +1117,9 @@ public class GameRoom implements Runnable {
         new Thread(respuestaJugador1).start();
         new Thread(respuestaJugador2).start();
 
-        final boolean[] decisionTomada = {false};
-        final boolean[] ambosPasaron = {true};
-        final int[] respuestasProcesadas = {0};
+        final boolean[] decisionTomada = { false };
+        final boolean[] ambosPasaron = { true };
+        final int[] respuestasProcesadas = { 0 };
 
         new Thread(() -> {
             try {
@@ -985,7 +1132,7 @@ public class GameRoom implements Runnable {
                             ambosPasaron[0] = false; // No todos pasaron
                             mandarATodos("Ordago aceptado! Fin del juego.");
                             puntos[getGanadorGrande() % 2] = 25; // Asigna los puntos al equipo ganador
-                        }else{
+                        } else {
                             mandarATodos("Jugador " + ((jugador + 1) % 4 + 1) + " no ha querido el ordago");
                         }
                     }
@@ -994,7 +1141,7 @@ public class GameRoom implements Runnable {
                 e.printStackTrace();
             }
         }).start();
-    
+
         new Thread(() -> {
             try {
                 String respuesta2 = respuestaJugador2.get(); // Obtiene la respuesta del jugador 2 cuando esté lista
@@ -1006,7 +1153,7 @@ public class GameRoom implements Runnable {
                             ambosPasaron[0] = false; // No todos pasaron
                             mandarATodos("Ordago aceptado! Fin del juego.");
                             puntos[getGanadorGrande() % 2] = 25; // Asigna los puntos al equipo ganador
-                        }else{
+                        } else {
                             mandarATodos("Jugador " + ((jugador + 3) % 4 + 1) + " no ha querido el ordago");
                         }
                     }
@@ -1016,12 +1163,14 @@ public class GameRoom implements Runnable {
             }
         }).start();
 
-        while (!decisionTomada[0] && respuestasProcesadas[0] < 2) {try {
-            Thread.sleep(50); // Pequeña espera para no consumir CPU - IMPORTANTE
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-            break;
-        }}
+        while (!decisionTomada[0] && respuestasProcesadas[0] < 2) {
+            try {
+                Thread.sleep(50); // Pequeña espera para no consumir CPU - IMPORTANTE
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+                break;
+            }
+        }
 
         if (ambosPasaron[0]) {
             mandarATodos("El ordago fue rechazado.");
@@ -1035,69 +1184,174 @@ public class GameRoom implements Runnable {
         mandarATodos("Jugador " + (jugador + 1) + " ha lanzado un ordago!");
 
         mandarMano((jugador + 1) % 4);
-        players.get((jugador + 1) % 4).mandarMensaje("Quieres el ordago? (si/no)");
-        String respuesta = players.get((jugador + 1) % 4).leerMensaje();
-        if (respuesta.equalsIgnoreCase("si")) {
-            mandarATodos("Ordago aceptado! Fin del juego.");
-            puntos[getGanadorPequena() % 2] = 25; // Asigna los puntos al equipo ganador
-            return false;
-        } else {
-            mandarATodos("Jugador " + ((jugador + 1) % 4 + 1) + " no ha querido el ordago");
-            mandarMano((jugador + 3) % 4);
+        mandarMano((jugador + 3) % 4);
+
+        FutureTask<String> respuestaJugador1 = new FutureTask<>(() -> {
+            players.get((jugador + 1) % 4).mandarMensaje("Quieres el ordago? (si/no)");
+            return players.get((jugador + 1) % 4).leerMensaje();
+        });
+
+        FutureTask<String> respuestaJugador2 = new FutureTask<>(() -> {
             players.get((jugador + 3) % 4).mandarMensaje("Quieres el ordago? (si/no)");
-            respuesta = players.get((jugador + 3) % 4).leerMensaje();
-            if (respuesta.equalsIgnoreCase("si")) {
-                mandarATodos("Ordago aceptado! Fin del juego.");
-                puntos[getGanadorPequena() % 2] = 25; // Asigna los puntos al equipo ganador
-                return false;
-            } else {
-                mandarATodos("El ordago fue rechazado.");
-                mandarATodos("Pareja " + ((jugador % 2) + 1) + " ha ganado pequena");
-                puntos[jugador % 2] += apuestaActual;
-                return false;
+            return players.get((jugador + 3) % 4).leerMensaje();
+        });
+
+        new Thread(respuestaJugador1).start();
+        new Thread(respuestaJugador2).start();
+
+        final boolean[] decisionTomada = { false };
+        final boolean[] ambosPasaron = { true };
+        final int[] respuestasProcesadas = { 0 };
+
+        new Thread(() -> {
+            try {
+                String respuesta1 = respuestaJugador1.get(); // Obtiene la respuesta del jugador 1 cuando esté lista
+                synchronized (decisionTomada) {
+                    respuestasProcesadas[0]++;
+                    if (!decisionTomada[0]) {
+                        if (respuesta1.equalsIgnoreCase("si")) {
+                            decisionTomada[0] = true; // Decisión significativa
+                            ambosPasaron[0] = false; // No todos pasaron
+                            mandarATodos("Ordago aceptado! Fin del juego.");
+                            puntos[getGanadorPequena() % 2] = 25; // Asigna los puntos al equipo ganador
+                        } else {
+                            mandarATodos("Jugador " + ((jugador + 1) % 4 + 1) + " no ha querido el ordago");
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }).start();
+
+        new Thread(() -> {
+            try {
+                String respuesta2 = respuestaJugador2.get(); // Obtiene la respuesta del jugador 2 cuando esté lista
+                synchronized (decisionTomada) {
+                    respuestasProcesadas[0]++;
+                    if (!decisionTomada[0]) {
+                        if (respuesta2.equalsIgnoreCase("si")) {
+                            decisionTomada[0] = true; // Decisión significativa
+                            ambosPasaron[0] = false; // No todos pasaron
+                            mandarATodos("Ordago aceptado! Fin del juego.");
+                            puntos[getGanadorPequena() % 2] = 25; // Asigna los puntos al equipo ganador
+                        } else {
+                            mandarATodos("Jugador " + ((jugador + 3) % 4 + 1) + " no ha querido el ordago");
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }).start();
+
+        while (!decisionTomada[0] && respuestasProcesadas[0] < 2) {
+            try {
+                Thread.sleep(50); // Pequeña espera para no consumir CPU - IMPORTANTE
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+                break;
             }
         }
+
+        if (ambosPasaron[0]) {
+            mandarATodos("El ordago fue rechazado.");
+            mandarATodos("Pareja " + ((jugador % 2) + 1) + " ha ganado pequena");
+            puntos[jugador % 2] += apuestaActual;
+        }
+        return false;
     }
 
     private boolean resolverOrdagoPares(int jugador, int apuestaActual) {
         mandarATodos("Jugador " + (jugador + 1) + " ha lanzado un ordago!");
-        String respuesta;
+        mandarATodos("Jugador " + (jugador % 4 + 1) + " ha envidado " + apuestaLanzada + " puntos.");
+
+        final boolean[] decisionTomada = { false };
+        final boolean[] ambosPasaron = { true };
+        final int[] respuestasProcesadas = { 0 };
 
         if (conPares.containsKey((jugador + 1) % 4)) {
             mandarMano((jugador + 1) % 4);
-            players.get((jugador + 1) % 4).mandarMensaje("Quieres el ordago? (si/no)");
-            respuesta = players.get((jugador + 1) % 4).leerMensaje();
-            if (respuesta.equalsIgnoreCase("si")) {
-                mandarATodos("Ordago aceptado! Fin del juego.");
-                puntos[getGanadorPares()[0] % 2] = 25; // Asigna los puntos al equipo ganador
-                return false;
-            } else {
-                mandarATodos("Jugador " + ((jugador + 1) % 4 + 1) + " no ha querido el ordago");
-            }
-        }
+
+            FutureTask<String> respuestaJugador1 = new FutureTask<>(() -> {
+                players.get((jugador + 1) % 4).mandarMensaje("Quieres el ordago? (si/no)");
+                return players.get((jugador + 1) % 4).leerMensaje();
+            });
+            new Thread(respuestaJugador1).start();
+
+            new Thread(() -> {
+                try {
+                    String respuesta1 = respuestaJugador1.get(); // Obtiene la respuesta del jugador 1 cuando esté lista
+                    synchronized (decisionTomada) {
+                        respuestasProcesadas[0]++;
+                        if (!decisionTomada[0]) {
+                            if (respuesta1.equalsIgnoreCase("si")) {
+                                decisionTomada[0] = true; // Decisión significativa
+                                ambosPasaron[0] = false; // No todos pasaron
+                                mandarATodos("Ordago aceptado! Fin del juego.");
+                                puntos[getGanadorPares()[0] % 2] += apuestaLanzada + getGanadorPares()[1]; // Se suman
+                                                                                                           // los puntos
+                                                                                                           // al
+                                // equipo contrario
+                            } else {
+                                mandarATodos("Jugador " + ((jugador + 1) % 4 + 1) + " no ha querido el ordago");
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }).start();
+        } else
+            respuestasProcesadas[0]++;
+
         if (conPares.containsKey((jugador + 3) % 4)) {
             mandarMano((jugador + 3) % 4);
-            players.get((jugador + 3) % 4).mandarMensaje("Quieres el ordago? (si/no)");
-            respuesta = players.get((jugador + 3) % 4).leerMensaje();
-            if (respuesta.equalsIgnoreCase("si")) {
-                mandarATodos("Ordago aceptado! Fin del juego.");
-                puntos[getGanadorPares()[0] % 2] = 25; // Asigna los puntos al equipo ganador
-                return false;
-            } else {
-                mandarATodos("Jugador " + ((jugador + 3) % 4 + 1) + " no ha querido el ordago");
-                mandarATodos("El ordago fue rechazado.");
-                int compaJugador = (jugador + 2) % 4;
-                if (conPares.get(compaJugador) == null) {
-                    puntos[jugador % 2] += apuestaActual + evaluarTipoPares(manosJugadores.get(jugador));
-                } else {
-                    puntos[jugador % 2] += apuestaActual + evaluarTipoPares(manosJugadores.get(jugador))
-                            + evaluarTipoPares(manosJugadores.get(compaJugador));
+
+            FutureTask<String> respuestaJugador2 = new FutureTask<>(() -> {
+                players.get((jugador + 3) % 4).mandarMensaje("Quieres el ordago? (si/no)");
+                return players.get((jugador + 3) % 4).leerMensaje();
+            });
+            new Thread(respuestaJugador2).start();
+
+            new Thread(() -> {
+                try {
+                    String respuesta2 = respuestaJugador2.get(); // Obtiene la respuesta del jugador 2 cuando esté lista
+                    synchronized (decisionTomada) {
+                        respuestasProcesadas[0]++;
+                        if (!decisionTomada[0]) {
+                            if (respuesta2.equalsIgnoreCase("si")) {
+                                decisionTomada[0] = true; // Decisión significativa
+                                ambosPasaron[0] = false; // No todos pasaron
+                                mandarATodos("Ordago aceptado! Fin del juego.");
+                                puntos[getGanadorPares()[0] % 2] += apuestaLanzada + getGanadorPares()[1]; // Se suman
+                                                                                                           // los puntos
+                                                                                                           // al
+                                // equipo contrario
+                            } else {
+                                mandarATodos("Jugador " + ((jugador + 3) % 4 + 1) + " no ha querido el ordago");
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
-                mandarATodos("Pareja " + ((jugador % 2) + 1) + " ha ganado pares");
-                return false;
+            }).start();
+        } else
+            respuestasProcesadas[0]++;
+
+        while (!decisionTomada[0] && respuestasProcesadas[0] < 2) {
+            try {
+                Thread.sleep(50); // Pequeña espera para no consumir CPU - IMPORTANTE
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+                break;
             }
-        } else {
+        }
+
+        if (ambosPasaron[0]) {
             mandarATodos("El ordago fue rechazado.");
+            mandarATodos("Pareja " + ((jugador % 2) + 1) + " ha ganado pares");
             int compaJugador = (jugador + 2) % 4;
             if (conPares.get(compaJugador) == null) {
                 puntos[jugador % 2] += apuestaActual + evaluarTipoPares(manosJugadores.get(jugador));
@@ -1105,48 +1359,98 @@ public class GameRoom implements Runnable {
                 puntos[jugador % 2] += apuestaActual + evaluarTipoPares(manosJugadores.get(jugador))
                         + evaluarTipoPares(manosJugadores.get(compaJugador));
             }
-            mandarATodos("Pareja " + ((jugador % 2) + 1) + " ha ganado pares");
-            return false;
         }
+        return false;
     }
 
     private boolean resolverOrdagoJuego(int jugador, int apuestaActual) {
         mandarATodos("Jugador " + (jugador + 1) + " ha lanzado un ordago!");
-        String respuesta;
+        mandarATodos("Jugador " + (jugador % 4 + 1) + " ha envidado " + apuestaLanzada + " puntos.");
+
+        final boolean[] decisionTomada = { false };
+        final boolean[] ambosPasaron = { true };
+        final int[] respuestasProcesadas = { 0 };
 
         if (conJuego.containsKey((jugador + 1) % 4)) {
             mandarMano((jugador + 1) % 4);
-            players.get((jugador + 1) % 4).mandarMensaje("Quieres el ordago? (si/no)");
-            respuesta = players.get((jugador + 1) % 4).leerMensaje();
-            if (respuesta.equalsIgnoreCase("si")) {
-                mandarATodos("Ordago aceptado! Fin del juego.");
-                puntos[getGanadorJuego()[0] % 2] = 25; // Asigna los puntos al equipo ganador
-                return false;
-            } else {
-                mandarATodos("Jugador " + ((jugador + 1) % 4 + 1) + " no ha querido el ordago");
-            }
-        }
+
+            FutureTask<String> respuestaJugador1 = new FutureTask<>(() -> {
+                players.get((jugador + 1) % 4).mandarMensaje("Quieres el ordago? (si/no)");
+                return players.get((jugador + 1) % 4).leerMensaje();
+            });
+            new Thread(respuestaJugador1).start();
+
+            new Thread(() -> {
+                try {
+                    String respuesta1 = respuestaJugador1.get(); // Obtiene la respuesta del jugador 1 cuando esté lista
+                    synchronized (decisionTomada) {
+                        respuestasProcesadas[0]++;
+                        if (!decisionTomada[0]) {
+                            if (respuesta1.equalsIgnoreCase("si")) {
+                                decisionTomada[0] = true; // Decisión significativa
+                                ambosPasaron[0] = false; // No todos pasaron
+                                mandarATodos("Ordago aceptado! Fin del juego.");
+                                puntos[getGanadorJuego()[0] % 2] += apuestaLanzada + getGanadorJuego()[1]; // Se suman
+                                                                                                           // los puntos
+                                                                                                           // al
+                                // equipo contrario
+                            } else {
+                                mandarATodos("Jugador " + ((jugador + 1) % 4 + 1) + " no ha querido el ordago");
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }).start();
+        } else
+            respuestasProcesadas[0]++;
+
         if (conJuego.containsKey((jugador + 3) % 4)) {
             mandarMano((jugador + 3) % 4);
-            players.get((jugador + 3) % 4).mandarMensaje("Quieres el ordago? (si/no)");
-            respuesta = players.get((jugador + 3) % 4).leerMensaje();
-            if (respuesta.equalsIgnoreCase("si")) {
-                mandarATodos("Ordago aceptado! Fin del juego.");
-                puntos[getGanadorJuego()[0] % 2] = 25; // Asigna los puntos al equipo ganador
-                return false;
-            } else {
-                mandarATodos("Jugador " + ((jugador + 3) % 4 + 1) + " no ha querido el ordago");
-                mandarATodos("El ordago fue rechazado.");
-                int compaJugador = (jugador + 2) % 4;
-                int cantidadGanada = getPuntosMano(conJuego.get(jugador)) == 31 ? 3 : 2;
-                if (conJuego.get(compaJugador) != null) {
-                    cantidadGanada += getPuntosMano(conJuego.get(compaJugador)) == 31 ? 3 : 2;
+
+            FutureTask<String> respuestaJugador2 = new FutureTask<>(() -> {
+                players.get((jugador + 3) % 4).mandarMensaje("Quieres el ordago? (si/no)");
+                return players.get((jugador + 3) % 4).leerMensaje();
+            });
+            new Thread(respuestaJugador2).start();
+
+            new Thread(() -> {
+                try {
+                    String respuesta2 = respuestaJugador2.get(); // Obtiene la respuesta del jugador 2 cuando esté lista
+                    synchronized (decisionTomada) {
+                        respuestasProcesadas[0]++;
+                        if (!decisionTomada[0]) {
+                            if (respuesta2.equalsIgnoreCase("si")) {
+                                decisionTomada[0] = true; // Decisión significativa
+                                ambosPasaron[0] = false; // No todos pasaron
+                                mandarATodos("Ordago aceptado! Fin del juego.");
+                                puntos[getGanadorJuego()[0] % 2] += apuestaLanzada + getGanadorJuego()[1]; // Se suman
+                                                                                                           // los puntos
+                                                                                                           // al
+                                // equipo contrario
+                            } else {
+                                mandarATodos("Jugador " + ((jugador + 3) % 4 + 1) + " no ha querido el ordago");
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
-                puntos[jugador % 2] += apuestaActual + cantidadGanada;
-                mandarATodos("Pareja " + ((jugador % 2) + 1) + " ha ganado el juego");
-                return false;
+            }).start();
+        } else
+            respuestasProcesadas[0]++;
+
+        while (!decisionTomada[0] && respuestasProcesadas[0] < 2) {
+            try {
+                Thread.sleep(50); // Pequeña espera para no consumir CPU - IMPORTANTE
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+                break;
             }
-        } else {
+        }
+
+        if (ambosPasaron[0]) {
             mandarATodos("El ordago fue rechazado.");
             int compaJugador = (jugador + 2) % 4;
             int cantidadGanada = getPuntosMano(conJuego.get(jugador)) == 31 ? 3 : 2;
@@ -1154,37 +1458,91 @@ public class GameRoom implements Runnable {
                 cantidadGanada += getPuntosMano(conJuego.get(compaJugador)) == 31 ? 3 : 2;
             }
             puntos[jugador % 2] += apuestaActual + cantidadGanada;
-            mandarATodos("Pareja " + ((jugador % 2) + 1) + " ha ganado el juego");
-            return false;
+            mandarATodos("Pareja " + ((jugador % 2) + 1) + " ha ganado juego");
         }
+        return false;
     }
 
     private boolean resolverOrdagoPunto(int jugador, int apuestaActual) {
         mandarATodos("Jugador " + (jugador + 1) + " ha lanzado un ordago!");
 
         mandarMano((jugador + 1) % 4);
-        players.get((jugador + 1) % 4).mandarMensaje("Quieres el ordago? (si/no)");
-        String respuesta = players.get((jugador + 1) % 4).leerMensaje();
-        if (respuesta.equalsIgnoreCase("si")) {
-            mandarATodos("Ordago aceptado! Fin del juego.");
-            puntos[getGanadorPunto() % 2] = 25; // Asigna los puntos al equipo ganador
-            return false;
-        } else {
-            mandarATodos("Jugador " + ((jugador + 1) % 4 + 1) + " no ha querido el ordago");
-            mandarMano((jugador + 3) % 4);
+        mandarMano((jugador + 3) % 4);
+
+        FutureTask<String> respuestaJugador1 = new FutureTask<>(() -> {
+            players.get((jugador + 1) % 4).mandarMensaje("Quieres el ordago? (si/no)");
+            return players.get((jugador + 1) % 4).leerMensaje();
+        });
+
+        FutureTask<String> respuestaJugador2 = new FutureTask<>(() -> {
             players.get((jugador + 3) % 4).mandarMensaje("Quieres el ordago? (si/no)");
-            respuesta = players.get((jugador + 3) % 4).leerMensaje();
-            if (respuesta.equalsIgnoreCase("si")) {
-                mandarATodos("Ordago aceptado! Fin del juego.");
-                puntos[getGanadorPunto() % 2] = 25; // Asigna los puntos al equipo ganador
-                return false;
-            } else {
-                mandarATodos("El ordago fue rechazado.");
-                mandarATodos("Pareja " + ((jugador % 2) + 1) + " ha ganado el punto");
-                puntos[jugador % 2] += apuestaActual;
-                return false;
+            return players.get((jugador + 3) % 4).leerMensaje();
+        });
+
+        new Thread(respuestaJugador1).start();
+        new Thread(respuestaJugador2).start();
+
+        final boolean[] decisionTomada = { false };
+        final boolean[] ambosPasaron = { true };
+        final int[] respuestasProcesadas = { 0 };
+
+        new Thread(() -> {
+            try {
+                String respuesta1 = respuestaJugador1.get(); // Obtiene la respuesta del jugador 1 cuando esté lista
+                synchronized (decisionTomada) {
+                    respuestasProcesadas[0]++;
+                    if (!decisionTomada[0]) {
+                        if (respuesta1.equalsIgnoreCase("si")) {
+                            decisionTomada[0] = true; // Decisión significativa
+                            ambosPasaron[0] = false; // No todos pasaron
+                            mandarATodos("Ordago aceptado! Fin del juego.");
+                            puntos[getGanadorPunto() % 2] = 25; // Asigna los puntos al equipo ganador
+                        } else {
+                            mandarATodos("Jugador " + ((jugador + 1) % 4 + 1) + " no ha querido el ordago");
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }).start();
+
+        new Thread(() -> {
+            try {
+                String respuesta2 = respuestaJugador2.get(); // Obtiene la respuesta del jugador 2 cuando esté lista
+                synchronized (decisionTomada) {
+                    respuestasProcesadas[0]++;
+                    if (!decisionTomada[0]) {
+                        if (respuesta2.equalsIgnoreCase("si")) {
+                            decisionTomada[0] = true; // Decisión significativa
+                            ambosPasaron[0] = false; // No todos pasaron
+                            mandarATodos("Ordago aceptado! Fin del juego.");
+                            puntos[getGanadorPunto() % 2] = 25; // Asigna los puntos al equipo ganador
+                        } else {
+                            mandarATodos("Jugador " + ((jugador + 3) % 4 + 1) + " no ha querido el ordago");
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }).start();
+
+        while (!decisionTomada[0] && respuestasProcesadas[0] < 2) {
+            try {
+                Thread.sleep(50); // Pequeña espera para no consumir CPU - IMPORTANTE
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+                break;
             }
         }
+
+        if (ambosPasaron[0]) {
+            mandarATodos("El ordago fue rechazado.");
+            mandarATodos("Pareja " + ((jugador % 2) + 1) + " ha ganado el punto");
+            puntos[jugador % 2] += apuestaActual;
+        }
+        return false;
     }
 
     private int getGanadorGrande() {
