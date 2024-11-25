@@ -542,8 +542,11 @@ public class GameRoom implements Runnable {
             return players.get((jugador + 3) % 4).leerMensaje();
         });
 
-        new Thread(respuestaJugador1).start();
-        new Thread(respuestaJugador2).start();
+        Thread hiloJugador1 = new Thread(respuestaJugador1);
+        Thread hiloJugador2 = new Thread(respuestaJugador2);
+
+        hiloJugador1.start();
+        hiloJugador2.start();
 
         final boolean[] decisionTomada = { false };
         final boolean[] ambosPasaron = { true };
@@ -558,11 +561,14 @@ public class GameRoom implements Runnable {
                                 mensaje1)) {
                             decisionTomada[0] = true; // Decisión significativa
                             ambosPasaron[0] = false; // No todos pasaron
+                            hiloJugador2.interrupt(); // Interrumpir al segundo jugador
                         }
                         respuestasProcesadas[0]++;
                     }
                 }
-            } catch (Exception e) {
+            }catch(InterruptedException e){
+
+            }catch (Exception e) {
                 e.printStackTrace();
             }
         }).start();
@@ -576,10 +582,13 @@ public class GameRoom implements Runnable {
                                 mensaje1)) {
                             decisionTomada[0] = true; // Decisión significativa
                             ambosPasaron[0] = false; // No todos pasaron
+                            hiloJugador1.interrupt(); // Interrumpir al segundo jugador
                         }
                         respuestasProcesadas[0]++;
                     }
                 }
+            }catch(InterruptedException e){
+
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -651,8 +660,11 @@ public class GameRoom implements Runnable {
             return players.get((jugador + 3) % 4).leerMensaje();
         });
 
-        new Thread(respuestaJugador1).start();
-        new Thread(respuestaJugador2).start();
+        Thread hiloJugador1 = new Thread(respuestaJugador1);
+        Thread hiloJugador2 = new Thread(respuestaJugador2);
+
+        hiloJugador1.start();
+        hiloJugador2.start();
 
         final boolean[] decisionTomada = { false };
         final boolean[] ambosPasaron = { true };
@@ -667,11 +679,12 @@ public class GameRoom implements Runnable {
                                 mensaje1)) {
                             decisionTomada[0] = true; // Decisión significativa
                             ambosPasaron[0] = false; // No todos pasaron
+                            hiloJugador2.interrupt();
                         }
                         respuestasProcesadas[0]++;
                     }
                 }
-            } catch (Exception e) {
+            }catch(InterruptedException e){} catch (Exception e) {
                 e.printStackTrace();
             }
         }).start();
@@ -685,11 +698,12 @@ public class GameRoom implements Runnable {
                                 mensaje1)) {
                             decisionTomada[0] = true; // Decisión significativa
                             ambosPasaron[0] = false; // No todos pasaron
+                            hiloJugador1.interrupt();
                         }
                         respuestasProcesadas[0]++;
                     }
                 }
-            } catch (Exception e) {
+            }catch(InterruptedException e){} catch (Exception e) {
                 e.printStackTrace();
             }
         }).start();
