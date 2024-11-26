@@ -561,7 +561,7 @@ public class GameRoom implements Runnable {
                                 mensaje1)) {
                             decisionTomada[0] = true; // Decisión significativa
                             ambosPasaron[0] = false; // No todos pasaron
-                            hiloJugador2.interrupt(); // Interrumpir al segundo jugador
+                            if (respuestasProcesadas[0]==0) players.get((jugador+3)%4).mandarMensaje("pasar");
                         }
                         respuestasProcesadas[0]++;
                     }
@@ -582,7 +582,7 @@ public class GameRoom implements Runnable {
                                 mensaje1)) {
                             decisionTomada[0] = true; // Decisión significativa
                             ambosPasaron[0] = false; // No todos pasaron
-                            hiloJugador1.interrupt(); // Interrumpir al segundo jugador
+                            if (respuestasProcesadas[0]==0) players.get((jugador+1)%4).mandarMensaje("pasar");
                         }
                         respuestasProcesadas[0]++;
                     }

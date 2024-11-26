@@ -21,8 +21,14 @@ public class Client {
                 String response;
                 try {
                     while ((response = in.readLine()) != null) {
-                        System.out.println(response);
-                        if (response.equalsIgnoreCase("FIN")) break;
+                        if (response.equalsIgnoreCase("pasar")){
+                            out.println("");
+                            out.flush();
+                        }
+                        else{
+                            System.out.println(response);
+                            if (response.equalsIgnoreCase("FIN")) break;
+                        }
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -31,6 +37,7 @@ public class Client {
 
             while (scaner.hasNextLine()) {
                 out.println(scaner.nextLine());  // Envía mensajes al servidor
+                out.flush();
             }
 
         } catch (IOException e) {
