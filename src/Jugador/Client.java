@@ -16,26 +16,30 @@ public class Client {
 
             System.out.println("Conectado al servidor de Mus.");
 
+            String[] response={""};
+
             // Hilo para leer mensajes del servidor
             new Thread(() -> {
-                String response;
+                
                 try {
-                    while ((response = in.readLine()) != null) {
-                        if (response.equalsIgnoreCase("pasar")){
+                    while ((response[0] = in.readLine()) != null) {
+                        if (response[0].equalsIgnoreCase("pasar")){
                             out.println("");
                             out.flush();
                         }
                         else{
-                            System.out.println(response);
-                            if (response.equalsIgnoreCase("FIN")) break;
+                            System.out.println(response[0]);
+                            if (response[0].equalsIgnoreCase("FIN")) break;
                         }
                     }
+                    System.out.println("Pulsa Enter para cerrar");
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
             }).start();
 
             while (scaner.hasNextLine()) {
+                if(response[0].equalsIgnoreCase("FIN")) break;
                 out.println(scaner.nextLine());  // Envía mensajes al servidor
                 out.flush();
             }
